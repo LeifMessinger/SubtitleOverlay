@@ -13,33 +13,14 @@
 ********************************************************************************************/
 
 #include "raylib.h"
-#include "screens.h"    // NOTE: Declares global (extern) variables and screens functions
+#include <string.h>	//strcat
+#include <stdio.h>	//puts
+#include <stdlib.h>	//malloc
 
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
 #endif
-
-//----------------------------------------------------------------------------------
-// Shared Variables Definition (global)
-// NOTE: Those variables are shared between modules through screens.h
-//----------------------------------------------------------------------------------
-GameScreen currentScreen = LOGO;
-Font font = { 0 };
-Music music = { 0 };
-Sound fxCoin = { 0 };
-
-//----------------------------------------------------------------------------------
-// Local Variables Definition (local to this module)
-//----------------------------------------------------------------------------------
-static const int screenWidth = 800;
-static const int screenHeight = 450;
-
-// Required variables to manage screen transitions (fade-in, fade-out)
-static float transAlpha = 0.0f;
-static bool onTransition = false;
-static bool transFadeOut = false;
-static int transFromScreen = -1;
-static GameScreen transToScreen = UNKNOWN;
+static const int FRAME_RATE = 1;
 
 //----------------------------------------------------------------------------------
 // Local Functions Declaration
@@ -55,239 +36,87 @@ static void UpdateDrawFrame(void);          // Update and draw one frame
 //----------------------------------------------------------------------------------
 // Main entry point
 //----------------------------------------------------------------------------------
-int main(void)
-{
-    // Initialization
-    //---------------------------------------------------------
-    InitWindow(screenWidth, screenHeight, "raylib game template");
 
-    InitAudioDevice();      // Initialize audio device
+RenderTexture2D target;
+Font subtitleFont;
+const int SUBTITLE_FONT_SIZE = 50;
 
-    // Load global data (assets that must be available in all screens, i.e. font)
-    font = LoadFont("resources/mecha.png");
-    music = LoadMusicStream("resources/ambient.ogg");
-    fxCoin = LoadSound("resources/coin.wav");
+void LoadGameShit(){
+	SetConfigFlags(FLAG_WINDOW_TRANSPARENT); // Configures window to be transparent
+	SetConfigFlags(FLAG_WINDOW_TOPMOST); //Always on top
+	SetConfigFlags(FLAG_WINDOW_MOUSE_PASSTHROUGH);
+	SetConfigFlags(FLAG_WINDOW_UNFOCUSED);	//Probably just use less processing power
+	InitWindow(GetScreenWidth(), GetScreenHeight(), "Transparent");	//It doesn't actually set the height to the monitor height. Frustrating.
+	SetWindowPosition(0, 0);
+	SetWindowState(FLAG_WINDOW_UNDECORATED); // Hide border/titlebar; omit if you want them there.
+	SetTargetFPS(FRAME_RATE);
 
-    SetMusicVolume(music, 1.0f);
-    PlayMusicStream(music);
+	/*char* subtitlePath = (char*)calloc(100, 1);
+	strcpy(subtitlePath, GetWorkingDirectory());
+	strcat(subtitlePath, "\\");
+	strcat(subtitlePath, "RoadgeekMittelschrift.ttf");
+	puts(subtitlePath);*/
+	subtitleFont = LoadFontEx("resources/RoadgeekMittelschrift.ttf", SUBTITLE_FONT_SIZE, NULL, 0);
+	//free(subtitlePath);
 
-    // Setup and init first screen
-    currentScreen = LOGO;
-    InitLogoScreen();
-
-#if defined(PLATFORM_WEB)
-    emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
-#else
-    SetTargetFPS(60);       // Set our game to run at 60 frames-per-second
-    //--------------------------------------------------------------------------------------
-
-    // Main game loop
-    while (!WindowShouldClose())    // Detect window close button or ESC key
-    {
-        UpdateDrawFrame();
-    }
-#endif
-
-    // De-Initialization
-    //--------------------------------------------------------------------------------------
-    // Unload current screen data before closing
-    switch (currentScreen)
-    {
-        case LOGO: UnloadLogoScreen(); break;
-        case TITLE: UnloadTitleScreen(); break;
-        case GAMEPLAY: UnloadGameplayScreen(); break;
-        case ENDING: UnloadEndingScreen(); break;
-        default: break;
-    }
-
-    // Unload global data loaded
-    UnloadFont(font);
-    UnloadMusicStream(music);
-    UnloadSound(fxCoin);
-
-    CloseAudioDevice();     // Close audio context
-
-    CloseWindow();          // Close window and OpenGL context
-    //--------------------------------------------------------------------------------------
-
-    return 0;
+	target = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+	printf("Screen: (%d, %d)\t Monitor: (%d, %d)\n", GetScreenWidth(), GetScreenHeight(), GetMonitorWidth(0), GetMonitorHeight(0));
 }
 
-//----------------------------------------------------------------------------------
-// Module specific Functions Definition
-//----------------------------------------------------------------------------------
-// Change to next screen, no transition
-static void ChangeToScreen(GameScreen screen)
-{
-    // Unload current screen
-    switch (currentScreen)
-    {
-        case LOGO: UnloadLogoScreen(); break;
-        case TITLE: UnloadTitleScreen(); break;
-        case GAMEPLAY: UnloadGameplayScreen(); break;
-        case ENDING: UnloadEndingScreen(); break;
-        default: break;
-    }
+void UpdateDrawFrame(){	//GetFrameTime gives you frame time
+	//Drawing to the texture
+	BeginTextureMode(target);
+	ClearBackground(BLANK);
+	
+	Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
+	//DrawRectangle(center.x - 2, center.y - 2, 4, 4, RED);	//Center dot
+	
+	const char* subtitleText = "Bro: Raylib is cool. This didn't even take that long.";
+	Vector2 subtitleBoundingBox = MeasureTextEx(subtitleFont, subtitleText, SUBTITLE_FONT_SIZE, 5);
+	Vector2 subtitleBoundingBoxExtra = {20, 10};
+	Color subtitleBoxColor = BLACK;
+	subtitleBoxColor.a = 220;
+	
+	Vector2 subtitlePosition = {center.x, GetScreenHeight() - (subtitleBoundingBox.y * 1.5)};	//Center of the subtitles
+	
+	DrawRectangle(subtitlePosition.x - (subtitleBoundingBox.x / 2) - (subtitleBoundingBoxExtra.x / 2),
+		subtitlePosition.y - (subtitleBoundingBox.y / 2) - (subtitleBoundingBoxExtra.y / 2),
+		subtitleBoundingBox.x + subtitleBoundingBoxExtra.x,
+		subtitleBoundingBox.y + subtitleBoundingBoxExtra.y,
+		subtitleBoxColor
+	);	//Center dot
+	DrawTextEx(subtitleFont, subtitleText, (Vector2){center.x - (subtitleBoundingBox.x / 2), GetScreenHeight() - (subtitleBoundingBox.y * 2)}, SUBTITLE_FONT_SIZE, 5, WHITE);
+	EndTextureMode();
 
-    // Init next screen
-    switch (screen)
-    {
-        case LOGO: InitLogoScreen(); break;
-        case TITLE: InitTitleScreen(); break;
-        case GAMEPLAY: InitGameplayScreen(); break;
-        case ENDING: InitEndingScreen(); break;
-        default: break;
-    }
-
-    currentScreen = screen;
+	BeginDrawing();
+	//Drawing the texture to the frame buffer
+	ClearBackground(BLANK);
+	DrawTextureRec(
+		target.texture,
+		(Rectangle){ 0.0f, 0.0f, GetScreenWidth(), -GetScreenHeight() },	//Flip the height, for some reason
+		(Vector2){ 0.f, 0.f },	//Origin
+		WHITE	//Color
+	);
+	EndDrawing();
 }
 
-// Request transition to next screen
-static void TransitionToScreen(GameScreen screen)
-{
-    onTransition = true;
-    transFadeOut = false;
-    transFromScreen = currentScreen;
-    transToScreen = screen;
-    transAlpha = 0.0f;
+void UnloadGameShit(){
+	UnloadFont(subtitleFont);
+	UnloadRenderTexture(target);
+	CloseWindow();
 }
 
-// Update transition effect (fade-in, fade-out)
-static void UpdateTransition(void)
-{
-    if (!transFadeOut)
-    {
-        transAlpha += 0.05f;
+int main(){
+	LoadGameShit();
+	#if defined(PLATFORM_WEB)
+		emscripten_set_main_loop(UpdateDrawFrame, FRAME_RATE, 1);
+	#else
+		while(!WindowShouldClose())
+		{
+			UpdateDrawFrame();
+		}
+	#endif
+	UnloadGameShit();
 
-        // NOTE: Due to float internal representation, condition jumps on 1.0f instead of 1.05f
-        // For that reason we compare against 1.01f, to avoid last frame loading stop
-        if (transAlpha > 1.01f)
-        {
-            transAlpha = 1.0f;
-
-            // Unload current screen
-            switch (transFromScreen)
-            {
-                case LOGO: UnloadLogoScreen(); break;
-                case TITLE: UnloadTitleScreen(); break;
-                case OPTIONS: UnloadOptionsScreen(); break;
-                case GAMEPLAY: UnloadGameplayScreen(); break;
-                case ENDING: UnloadEndingScreen(); break;
-                default: break;
-            }
-
-            // Load next screen
-            switch (transToScreen)
-            {
-                case LOGO: InitLogoScreen(); break;
-                case TITLE: InitTitleScreen(); break;
-                case GAMEPLAY: InitGameplayScreen(); break;
-                case ENDING: InitEndingScreen(); break;
-                default: break;
-            }
-
-            currentScreen = transToScreen;
-
-            // Activate fade out effect to next loaded screen
-            transFadeOut = true;
-        }
-    }
-    else  // Transition fade out logic
-    {
-        transAlpha -= 0.02f;
-
-        if (transAlpha < -0.01f)
-        {
-            transAlpha = 0.0f;
-            transFadeOut = false;
-            onTransition = false;
-            transFromScreen = -1;
-            transToScreen = UNKNOWN;
-        }
-    }
-}
-
-// Draw transition effect (full-screen rectangle)
-static void DrawTransition(void)
-{
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), Fade(BLACK, transAlpha));
-}
-
-// Update and draw game frame
-static void UpdateDrawFrame(void)
-{
-    // Update
-    //----------------------------------------------------------------------------------
-    UpdateMusicStream(music);       // NOTE: Music keeps playing between screens
-
-    if (!onTransition)
-    {
-        switch(currentScreen)
-        {
-            case LOGO:
-            {
-                UpdateLogoScreen();
-
-                if (FinishLogoScreen()) TransitionToScreen(TITLE);
-
-            } break;
-            case TITLE:
-            {
-                UpdateTitleScreen();
-
-                if (FinishTitleScreen() == 1) TransitionToScreen(OPTIONS);
-                else if (FinishTitleScreen() == 2) TransitionToScreen(GAMEPLAY);
-
-            } break;
-            case OPTIONS:
-            {
-                UpdateOptionsScreen();
-
-                if (FinishOptionsScreen()) TransitionToScreen(TITLE);
-
-            } break;
-            case GAMEPLAY:
-            {
-                UpdateGameplayScreen();
-
-                if (FinishGameplayScreen() == 1) TransitionToScreen(ENDING);
-                //else if (FinishGameplayScreen() == 2) TransitionToScreen(TITLE);
-
-            } break;
-            case ENDING:
-            {
-                UpdateEndingScreen();
-
-                if (FinishEndingScreen() == 1) TransitionToScreen(TITLE);
-
-            } break;
-            default: break;
-        }
-    }
-    else UpdateTransition();    // Update transition (fade-in, fade-out)
-    //----------------------------------------------------------------------------------
-
-    // Draw
-    //----------------------------------------------------------------------------------
-    BeginDrawing();
-
-        ClearBackground(RAYWHITE);
-
-        switch(currentScreen)
-        {
-            case LOGO: DrawLogoScreen(); break;
-            case TITLE: DrawTitleScreen(); break;
-            case OPTIONS: DrawOptionsScreen(); break;
-            case GAMEPLAY: DrawGameplayScreen(); break;
-            case ENDING: DrawEndingScreen(); break;
-            default: break;
-        }
-
-        // Draw full screen rectangle in front of everything
-        if (onTransition) DrawTransition();
-
-        //DrawFPS(10, 10);
-
-    EndDrawing();
-    //----------------------------------------------------------------------------------
+	return 0;
 }
