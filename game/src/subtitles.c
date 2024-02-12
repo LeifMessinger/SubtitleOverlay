@@ -18,6 +18,7 @@ void UpdateSubtitleTexture(const char* subtitleText){
 	const Vector2 subtitleBoundingBox = MeasureTextEx(subtitleFont, subtitleText, SUBTITLE_FONT_SIZE, 5);
 	const Vector2 subtitleBoundingBoxExtra = {20, 10};
 	const Color subtitleBoxColor = {0, 0, 0, 220};
+	const Color subtitleTextColor = RAINBOW? ColorFromHSV(GetTime() * 100.0, 1, 1) : WHITE;
 	
 	const Vector2 subtitlePosition = {(subtitleBoundingBoxExtra.x / 2), (subtitleBoundingBoxExtra.y / 2) + subtitleBoundingBox.y};	//Position of the subtitles inside the texture buffer
 	
@@ -27,7 +28,7 @@ void UpdateSubtitleTexture(const char* subtitleText){
 	//Drawing to the texture
 	BeginTextureMode(target);
 	ClearBackground(subtitleBoxColor);
-	DrawTextEx(subtitleFont, subtitleText, (Vector2){subtitleBoundingBoxExtra.x / 2, subtitleBoundingBoxExtra.y / 2}, SUBTITLE_FONT_SIZE, 5, WHITE);
+	DrawTextEx(subtitleFont, subtitleText, (Vector2){subtitleBoundingBoxExtra.x / 2, subtitleBoundingBoxExtra.y / 2}, SUBTITLE_FONT_SIZE, 5, subtitleTextColor);
 	EndTextureMode();
 }
 
