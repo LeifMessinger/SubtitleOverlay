@@ -3,6 +3,6 @@
 #include <stdio.h>	//puts
 #include <stdlib.h>	//malloc
 void LoadSubtitles();
-void UpdateSubtitleTexture();
+void UpdateSubtitleTexture(const char* subtitleText);
 void DrawSubtitleTexture();
 void UnloadSubtitles();

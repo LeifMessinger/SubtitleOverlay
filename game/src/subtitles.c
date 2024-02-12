@@ -13,8 +13,7 @@ void LoadSubtitles(){
 	//printf("Screen: (%d, %d)\t Monitor: (%d, %d)\n", GetScreenWidth(), GetScreenHeight(), GetMonitorWidth(0), GetMonitorHeight(0));
 }
 
-void UpdateSubtitleTexture(){
-	const char* subtitleText = "Bro: Raylib is cool. This didn't even take that long.";
+void UpdateSubtitleTexture(const char* subtitleText){
 	const Vector2 subtitleBoundingBox = MeasureTextEx(subtitleFont, subtitleText, SUBTITLE_FONT_SIZE, 5);
 	const Vector2 subtitleBoundingBoxExtra = {20, 10};
 	const Color subtitleBoxColor = {0, 0, 0, 220};

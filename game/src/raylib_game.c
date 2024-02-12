@@ -52,7 +52,7 @@ void LoadGameShit(){
 }
 
 void UpdateDrawFrame(){	//GetFrameTime gives you frame time
-	UpdateSubtitleTexture();
+	UpdateSubtitleTexture("Bro: Raylib is cool. This didn't even take that long.");
 	DrawSubtitleTexture();
 }
 
