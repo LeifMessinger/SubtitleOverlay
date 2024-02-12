@@ -23,7 +23,6 @@
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
 #endif
-static const int FRAME_RATE = 100;
 
 //----------------------------------------------------------------------------------
 // Local Functions Declaration
