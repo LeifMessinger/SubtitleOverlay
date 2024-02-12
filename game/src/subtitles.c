@@ -1,4 +1,5 @@
 #include "subtitles.h"
+#include "my_config.h"
 
 RenderTexture2D target;
 Vector2 targetDimensions = {1, 1};
@@ -37,10 +38,18 @@ Rectangle rectangleFromSizeCenteredAroundPosition(Vector2 size, Vector2 position
 	return rectangleFromSizeAndPosition(size, (Vector2){position.x - (size.x / 2), position.y - (size.y / 2)});
 }
 
+bool pointIsInRectangle(Vector2 point, Rectangle rect){
+	return (point.x >= rect.x && point.x <= rect.x + rect.width) && (point.y >= rect.y && point.y <= rect.y + rect.height);
+}
+
 void DrawSubtitleTexture(){
 	BeginDrawing();
 	//Drawing the texture to the frame buffer
-	ClearBackground(BLANK);
+	if(OVERLAY_MODE){
+		ClearBackground(BLANK);
+	}else{
+		ClearBackground(PINK);
+	}
 	const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
 	const float scale = 1.0f;
 	const Vector2 destinationSize = {targetDimensions.x * scale, targetDimensions.y * scale};
@@ -54,6 +63,15 @@ void DrawSubtitleTexture(){
 		0, //Rotation
 		WHITE	//Color
 	);
+	
+	if(IsCursorOnScreen()){
+		if(pointIsInRectangle(GetMousePosition(), subtitleDestination)){
+			SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
+		}else{
+			SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+		}
+	}
+	
 	EndDrawing();
 }
 
