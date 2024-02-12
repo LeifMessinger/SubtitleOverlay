@@ -4,7 +4,7 @@
 RenderTexture2D target;
 Vector2 targetDimensions = {1, 1};
 Font subtitleFont;
-const int SUBTITLE_FONT_SIZE = 50;
+const int SUBTITLE_FONT_SIZE = 100;
 
 void LoadSubtitles(){
 	subtitleFont = LoadFontEx("resources/RoadgeekMittelschrift.ttf", SUBTITLE_FONT_SIZE, NULL, 0);
@@ -51,7 +51,7 @@ void DrawSubtitleTexture(){
 		ClearBackground(PINK);
 	}
 	const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
-	const float scale = 1.0f;
+	const float scale = 0.5f;
 	const Vector2 destinationSize = {targetDimensions.x * scale, targetDimensions.y * scale};
 	const Vector2 subtitlePosition = {center.x, GetScreenHeight() - (destinationSize.y * 1.5)};	//Center of the subtitles
 	const Rectangle subtitleDestination = rectangleFromSizeCenteredAroundPosition(destinationSize, subtitlePosition);
