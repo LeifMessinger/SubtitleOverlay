@@ -6,8 +6,16 @@
 #define OVERLAY_MODE true
 #define BORDERLESS_WINDOW_MODE false	//Kinda breaks HDR. Breaks everything. Would not suggest
 #define FRAME_RATE 1
-#define RAINBOW false
-#define OUTLINE true
+
 #define BACKGROUND false
+
+#define OUTLINE false
+#define OUTLINE_DISTANCE 5
+
+#define AROUND_SHADOW true
+#define AROUND_SHADOW_DISTANCE 20
+
+
+#define RAINBOW false
 
 #endif

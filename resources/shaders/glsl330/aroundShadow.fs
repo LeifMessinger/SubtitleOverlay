@@ -46,6 +46,11 @@ uniform vec4 outlineColor;
 // Output fragment color
 out vec4 finalColor;
 
+//from https://www.shadertoy.com/view/MtX3z2
+float sigmoid(float x) {
+	return 1.0 / (1.0 + (exp(-(x - 0.5) * 14.0))); 
+}
+
 const float threshold = 0.9f;
 
 bool isOpaque(vec4 color){
@@ -53,10 +58,11 @@ bool isOpaque(vec4 color){
 }
 
 #define PI (355.0 / 113.0)
-#define SAMPLES 32
+#define SAMPLES 320.0
 
 //Very crude. Worsens with distance. Only use if you're like 3 pixels away.
-bool isInRangeOfOpaquePixel(sampler2D tex, vec2 xy, float outlineSize, vec2 pixelToTexture){
+float ambientOcclusion(sampler2D tex, vec2 xy, float outlineSize, vec2 pixelToTexture){
+	float alpha = 0.0;
 	//Sample in a spiral. Thanks https://blog.voxagon.se/2018/05/04/bokeh-depth-of-field-in-single-pass.html
 	for(int sampleNumber = 1; sampleNumber < SAMPLES; ++sampleNumber){
 		float rads = hash12(xy) + float(sampleNumber);	//It's good this isn't in terms of PI, because that means we'll get semi random samples
@@ -65,23 +71,19 @@ bool isInRangeOfOpaquePixel(sampler2D tex, vec2 xy, float outlineSize, vec2 pixe
 		
 		vec2 sampleXY = vec2(cos(rads), sin(rads)) * distance;
 		if(isOpaque(texture2D(tex, xy + (sampleXY * pixelToTexture)))){
-			return true;
+			float shade = 1.0 - (float(sampleNumber) / float(SAMPLES));	//Can be at most 1 and at least 0
+			alpha += shade / 10.0;	//This happens SAMPLES number of times, so we want alpha to be at most 1 (the pixel being totally surrounded by text)
 		}
 	}
-	return false;
+	return alpha;
 }
 
 void main(){
 	vec4 texelColor = texture2D(texture0, fragTexCoord);
 	
-	bool inRange = isInRangeOfOpaquePixel(texture0, fragTexCoord, outlineSize, 1.0 / textureSize);
-	if(inRange){
-		//Make it blue so that we know what the outline is
-		finalColor = outlineColor;
-	}else{	//If we are nowhere near an opaque pixel
-		//Keep the original color.
-		finalColor = texelColor;
-	}
+	finalColor = vec4(0.0);
+	
+	finalColor.a = ambientOcclusion(texture0, fragTexCoord, outlineSize, 1.0 / textureSize);
 	
 	//If we are inside the opaque object
 	if(isOpaque(texelColor)){
