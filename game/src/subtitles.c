@@ -47,50 +47,6 @@ void UpdateSubtitleTexture(const char* subtitleText){
 		ClearBackground(BLANK);	//Still need to clear it to get rid of anything
 	}
 	DrawTextEx(subtitleFont, subtitleText, (Vector2){subtitleBoundingBoxExtra.x / 2, subtitleBoundingBoxExtra.y / 2}, SUBTITLE_FONT_SIZE, 5, subtitleTextColor);
-	if(OUTLINE){
-		//We put this in the draw loop so the amount of border can change while running.
-		const float tScale[2] = { (float)targetDimensions.x, (float)targetDimensions.y };
-		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "textureSize"), tScale, SHADER_UNIFORM_VEC2);
-		const float outlineSize = OUTLINE_DISTANCE;	//GLSL max int is 255
-		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "outlineSize"), &outlineSize, SHADER_UNIFORM_FLOAT);
-		const float outlineColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};	//Hoping that 1 is 100% opacity
-		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "outlineColor"), outlineColor, SHADER_UNIFORM_VEC4);
-		
-		BeginShaderMode(outlineShader);
-		
-		DrawTexturePro(
-			target.texture,
-			(Rectangle){0, 0, targetDimensions.x, -targetDimensions.y},
-			(Rectangle){0, 0, targetDimensions.x, targetDimensions.y},
-			(Vector2){0, 0},
-			0, //Rotation
-			WHITE	//Color
-		);
-	
-		EndShaderMode();
-	}
-	if(AROUND_SHADOW){
-		//We put this in the draw loop so the amount of border can change while running.
-		const float tScale[2] = { (float)targetDimensions.x, (float)targetDimensions.y };
-		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "textureSize"), tScale, SHADER_UNIFORM_VEC2);
-		const float outlineSize = AROUND_SHADOW_DISTANCE;	//GLSL max int is 255
-		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "outlineSize"), &outlineSize, SHADER_UNIFORM_FLOAT);
-		const float outlineColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};	//Hoping that 1 is 100% opacity
-		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "outlineColor"), outlineColor, SHADER_UNIFORM_VEC4);
-		
-		BeginShaderMode(aroundShadowShader);
-		
-		DrawTexturePro(
-			target.texture,
-			(Rectangle){0, 0, targetDimensions.x, -targetDimensions.y},
-			(Rectangle){0, 0, targetDimensions.x, targetDimensions.y},
-			(Vector2){0, 0},
-			0, //Rotation
-			WHITE	//Color
-		);
-	
-		EndShaderMode();
-	}
 	EndTextureMode();
 }
 
@@ -119,6 +75,28 @@ void DrawSubtitleTexture(){
 	const Vector2 subtitlePosition = {center.x, GetScreenHeight() - (destinationSize.y * 1.5)};	//Center of the subtitles
 	const Rectangle subtitleDestination = rectangleFromSizeCenteredAroundPosition(destinationSize, subtitlePosition);
 	
+	if(OUTLINE){
+		//We put this in the draw loop so the amount of border can change while running.
+		const float tScale[2] = { (float)destinationSize.x, (float)destinationSize.y };
+		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "textureSize"), tScale, SHADER_UNIFORM_VEC2);
+		const float outlineSize = OUTLINE_DISTANCE;	//GLSL max int is 255
+		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "outlineSize"), &outlineSize, SHADER_UNIFORM_FLOAT);
+		const float outlineColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};	//Hoping that 1 is 100% opacity
+		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "outlineColor"), outlineColor, SHADER_UNIFORM_VEC4);
+		
+		BeginShaderMode(outlineShader);
+	}
+	if(AROUND_SHADOW){
+		//We put this in the draw loop so the amount of border can change while running.
+		const float tScale[2] = { (float)destinationSize.x, (float)destinationSize.y };
+		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "textureSize"), tScale, SHADER_UNIFORM_VEC2);
+		const float outlineSize = AROUND_SHADOW_DISTANCE;	//GLSL max int is 255
+		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "outlineSize"), &outlineSize, SHADER_UNIFORM_FLOAT);
+		const float outlineColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};	//Hoping that 1 is 100% opacity
+		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "outlineColor"), outlineColor, SHADER_UNIFORM_VEC4);
+		
+		BeginShaderMode(aroundShadowShader);
+	}
 	DrawTexturePro(
 		target.texture,
 		(Rectangle){0, 0, targetDimensions.x, -targetDimensions.y},
@@ -127,6 +105,9 @@ void DrawSubtitleTexture(){
 		0, //Rotation
 		WHITE	//Color
 	);
+	if(OUTLINE || AROUND_SHADOW){
+		EndShaderMode();
+	}
 	
 	if(IsCursorOnScreen()){
 		if(pointIsInRectangle(GetMousePosition(), subtitleDestination)){

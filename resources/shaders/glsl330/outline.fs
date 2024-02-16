@@ -53,13 +53,18 @@ bool isOpaque(vec4 color){
 }
 
 #define PI (355.0 / 113.0)
-#define SAMPLES 32
+#define SAMPLES 128
+//#define RANDOMIZE_BEGINNING true
 
 //Very crude. Worsens with distance. Only use if you're like 3 pixels away.
 bool isInRangeOfOpaquePixel(sampler2D tex, vec2 xy, float outlineSize, vec2 pixelToTexture){
 	//Sample in a spiral. Thanks https://blog.voxagon.se/2018/05/04/bokeh-depth-of-field-in-single-pass.html
 	for(int sampleNumber = 1; sampleNumber < SAMPLES; ++sampleNumber){
+#ifdef RANDOMIZE_BEGINNING
 		float rads = hash12(xy) + float(sampleNumber);	//It's good this isn't in terms of PI, because that means we'll get semi random samples
+#else
+		float rads = float(sampleNumber);	//It's good this isn't in terms of PI, because that means we'll get semi random samples
+#endif
 		const float startingDistance = 1.0;
 		float distance = startingDistance + ((outlineSize - startingDistance) * (float(sampleNumber) / float(SAMPLES)));
 		

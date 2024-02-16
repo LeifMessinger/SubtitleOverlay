@@ -9,10 +9,10 @@
 
 #define BACKGROUND false
 
-#define OUTLINE false
+#define OUTLINE true
 #define OUTLINE_DISTANCE 5
 
-#define AROUND_SHADOW true
+#define AROUND_SHADOW false
 #define AROUND_SHADOW_DISTANCE 20
 
 
