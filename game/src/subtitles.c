@@ -25,7 +25,7 @@ void LoadSubtitles(SubtitleSettings settings){
 void UpdateSubtitleTexture(const char* subtitleText, SubtitleSettings settings){
 	const Vector2 subtitleBoundingBox = MeasureTextEx(subtitleFont, subtitleText, settings.SUBTITLE_FONT_SIZE, 5);
 	const Vector2 subtitleBoundingBoxExtra = {30, 40};
-	const Color subtitleBoxColor = {0, 0, 0, 220};
+	const Color subtitleBoxColor = {0, 0, 0, 200};
 	const Color subtitleTextColor = (settings.RAINBOW)? ColorFromHSV(GetTime() * 500.0, 1, 1) : WHITE;
 	
 	const Vector2 subtitlePosition = {(subtitleBoundingBoxExtra.x / 2), (subtitleBoundingBoxExtra.y / 2) + subtitleBoundingBox.y};	//Position of the subtitles inside the texture buffer
