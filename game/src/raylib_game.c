@@ -13,7 +13,7 @@
 ********************************************************************************************/
 
 #include "raylib.h"
-#include "my_config.h" //OVERLAY_MODE
+#include "subtitle_settings.h" //OVERLAY_MODE
 #include "subtitles.h" //LoadSubtitles UpdateSubtitleTexture DrawSubtitleTexture UnloadSubtitles
 
 #include <string.h>	//strcat
@@ -35,32 +35,24 @@ static void DrawTransition(void);           // Draw transition effect (full-scre
 
 static void UpdateDrawFrame(void);          // Update and draw one frame
 
-void LoadOverlayWindow(){
-	if(OVERLAY_MODE){
-		SetConfigFlags(FLAG_WINDOW_TRANSPARENT); // Configures window to be transparent
-		SetConfigFlags(FLAG_WINDOW_TOPMOST); //Always on top
-		SetConfigFlags(FLAG_WINDOW_MOUSE_PASSTHROUGH);
-		SetConfigFlags(FLAG_WINDOW_UNFOCUSED);	//Probably just use less processing power
-	}
-	InitWindow(GetScreenWidth(), GetScreenHeight(), "Transparent");	//It doesn't actually set the height to the monitor height. Frustrating.
-	SetWindowPosition(0, 0);
-	SetWindowState(FLAG_WINDOW_UNDECORATED); // Hide border/titlebar; omit if you want them there.
-	if(BORDERLESS_WINDOW_MODE){
-		SetWindowState(FLAG_BORDERLESS_WINDOWED_MODE); // Hide border/titlebar; omit if you want them there.
-	}else{
-		SetMouseOffset(0, 10);
-	}
-	SetTargetFPS(FRAME_RATE);
-}
-
 void LoadGameShit(){
-	LoadOverlayWindow();
-	LoadSubtitles();
+	SubtitleSettings settings = getSubtitleSettings();
+	LoadOverlayWindow(false);
+	LoadSubtitles(settings);
 }
 
 void UpdateDrawFrame(){	//GetFrameTime gives you frame time
-	UpdateSubtitleTexture("Bro: Raylib is cool. This didn't even take that long.");
-	DrawSubtitleTexture();
+	if(isOverlayMode()){
+		ClearBackground(BLANK);
+	}else{
+		ClearBackground(PINK);
+	}
+
+	UpdateSubtitles();
+	
+	BeginDrawing();
+	DrawSubtitles();
+	EndDrawing();
 }
 
 void UnloadGameShit(){

@@ -1,11 +1,15 @@
 #include "subtitles.h"
-#include "my_config.h"
+#include <assert.h>
+#include <math.h>       // Required for: sinf(), cosf(), tan(), atan2f(), sqrtf(), floor(), fminf(), fmaxf(), fabsf()
 
-RenderTexture2D target;
-Vector2 targetDimensions = {1, 1};
-Font subtitleFont;
 Shader outlineShader, aroundShadowShader;
-const int SUBTITLE_FONT_SIZE = 100;
+
+Font subtitleFont;
+Font** fontArray = NULL;
+int numFonts = 0;
+
+SubtitleInstance* subtitleArray = NULL;
+int numSubtitles = 0;
 
 #if defined(PLATFORM_DESKTOP)
     #define GLSL_VERSION            330
@@ -13,84 +17,252 @@ const int SUBTITLE_FONT_SIZE = 100;
     #define GLSL_VERSION            100
 #endif
 
-void LoadSubtitles(){
-	subtitleFont = LoadFontEx("resources/fonts/RoadgeekMittelschrift.ttf", SUBTITLE_FONT_SIZE, NULL, 0);
+void LoadSubtitles(SubtitleSettings settings){
+	subtitleFont = LoadFontEx("resources/fonts/RoadgeekMittelschrift.ttf", settings.SUBTITLE_FONT_SIZE, NULL, 0);
+	assert(IsFontReady(subtitleFont));
 	
-	target = LoadRenderTexture(1, 1);
+	fontArray = (Font**)calloc(1, sizeof(Font*));
+	assert(fontArray != NULL);
+	fontArray[0] = &subtitleFont;
+	numFonts = 1;
 	
-	if(OUTLINE){
-		outlineShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/outline.fs", GLSL_VERSION));
+	SubtitleSettings bunchOfSettings[] = {
+		(SubtitleSettings){	//Nothing
+			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
+			initSubtitleSettings().textScale,	//Font size
+			initSubtitleSettings().position,	//Text position
+			
+			initSubtitleSettings().textColor,
+			
+			initSubtitleSettings().BACKGROUND,	//Background
+			initSubtitleSettings().subtitleBoundingBoxExtra,
+			initSubtitleSettings().subtitleBoxColor,
+	
+			initSubtitleSettings().OUTLINE,	//Outline
+			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			
+			initSubtitleSettings().AROUND_SHADOW,	//Around shadow
+			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			
+			initSubtitleSettings().RAINBOW	//Rainbow
+		}, (SubtitleSettings){	//Nothing
+			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
+			initSubtitleSettings().textScale,	//Font size
+			initSubtitleSettings().position,	//Text position
+			
+			initSubtitleSettings().textColor,
+			
+			false,	//Background
+			initSubtitleSettings().subtitleBoundingBoxExtra,
+			initSubtitleSettings().subtitleBoxColor,
+	
+			false,	//Outline
+			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			
+			false,	//Around shadow
+			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			
+			false	//Rainbow
+		}, (SubtitleSettings){	//Background only
+			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
+			initSubtitleSettings().textScale,	//Font size
+			initSubtitleSettings().position,	//Text position
+			
+			initSubtitleSettings().textColor,
+			
+			true,	//Background
+			initSubtitleSettings().subtitleBoundingBoxExtra,
+			initSubtitleSettings().subtitleBoxColor,
+	
+			false,	//Outline
+			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			
+			false,	//Around shadow
+			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			
+			false	//Rainbow
+		}, (SubtitleSettings){	//Outline only
+			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
+			initSubtitleSettings().textScale,	//Font size
+			initSubtitleSettings().position,	//Text position
+			
+			initSubtitleSettings().textColor,
+			
+			false,	//Background
+			initSubtitleSettings().subtitleBoundingBoxExtra,
+			initSubtitleSettings().subtitleBoxColor,
+	
+			true,	//Outline
+			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			
+			false,	//Around shadow
+			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			
+			false	//Rainbow
+		}, (SubtitleSettings){	//Background and outline
+			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
+			initSubtitleSettings().textScale,	//Font size
+			initSubtitleSettings().position,	//Text position
+			
+			initSubtitleSettings().textColor,
+			
+			true,	//Background
+			initSubtitleSettings().subtitleBoundingBoxExtra,
+			initSubtitleSettings().subtitleBoxColor,
+	
+			true,	//Outline
+			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			
+			false,	//Around shadow
+			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			
+			initSubtitleSettings().RAINBOW	//Rainbow
+		}, /*(SubtitleSettings){	//Around shadow
+			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
+			initSubtitleSettings().position,	//Text position
+			initSubtitleSettings().OVERLAY_MODE,	//Overlay
+			initSubtitleSettings().BORDERLESS_WINDOW_MODE,	//Borderless window (buggy)
+			initSubtitleSettings().FRAME_RATE,	//Frame rate
+			
+			initSubtitleSettings().textColor,
+			
+			initSubtitleSettings().BACKGROUND,	//Background
+			initSubtitleSettings().subtitleBoundingBoxExtra,
+			initSubtitleSettings().subtitleBoxColor,
+	
+			initSubtitleSettings().OUTLINE,	//Outline
+			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			
+			initSubtitleSettings().AROUND_SHADOW,	//Around shadow
+			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			
+			initSubtitleSettings().RAINBOW	//Rainbow
+		},*/
+		(SubtitleSettings){	//Rainbow
+			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
+			initSubtitleSettings().textScale,	//Font size
+			initSubtitleSettings().position,	//Text position
+			
+			initSubtitleSettings().textColor,
+			
+			initSubtitleSettings().BACKGROUND,	//Background
+			initSubtitleSettings().subtitleBoundingBoxExtra,
+			initSubtitleSettings().subtitleBoxColor,
+	
+			initSubtitleSettings().OUTLINE,	//Outline
+			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			
+			initSubtitleSettings().AROUND_SHADOW,	//Around shadow
+			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			
+			true	//Rainbow
+		}
+	};
+	//Spread them out
+	//numSubtitles = 1;
+	numSubtitles = (sizeof(bunchOfSettings) / sizeof(SubtitleSettings));
+	for(size_t i = 0; i < numSubtitles; ++i){
+		const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
+		const float turns = (float)i / (float)numSubtitles;
+		const float radius = 300.0f;
+		bunchOfSettings[i].position = (Vector2){center.x + cosf(turns * 2 * PI) * radius, center.y + sinf(turns * 2 * PI) * radius};
+		printVector2("Sub position", bunchOfSettings[i].position);
 	}
-	if(AROUND_SHADOW){
-		aroundShadowShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/aroundShadow.fs", GLSL_VERSION));
+	
+	subtitleArray = (SubtitleInstance*)calloc(numSubtitles, sizeof(SubtitleInstance));
+	assert(subtitleArray != NULL);
+	for(size_t i = 0; i < numSubtitles; ++i){
+		subtitleArray[i] = initSubtitleInstance(bunchOfSettings[i], DEFAULT_FONT);
 	}
+
+	outlineShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/outline.fs", GLSL_VERSION));
+	aroundShadowShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/aroundShadow.fs", GLSL_VERSION));
 
 	//printf("Screen: (%d, %d)\t Monitor: (%d, %d)\n", GetScreenWidth(), GetScreenHeight(), GetMonitorWidth(0), GetMonitorHeight(0));
 }
 
-void UpdateSubtitleTexture(const char* subtitleText){
-	const Vector2 subtitleBoundingBox = MeasureTextEx(subtitleFont, subtitleText, SUBTITLE_FONT_SIZE, 5);
-	const Vector2 subtitleBoundingBoxExtra = {30, 40};
-	const Color subtitleBoxColor = {0, 0, 0, 220};
-	const Color subtitleTextColor = RAINBOW? ColorFromHSV(GetTime() * 100.0, 1, 1) : WHITE;
+void UpdateSubtitles(){
+	if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){	//Doesn't work if in OVERLAY mode
+		for(size_t i = 0; i < numSubtitles; ++i){
+			if(pointIsInRectangle(GetMousePosition(), subtitleInstanceDestination(subtitleArray[i]))){
+		const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
+				subtitleArray[0].settings = subtitleArray[i].settings;
+				subtitleArray[0].settings.position = (Vector2){center.x, GetScreenHeight() - (subtitleInstanceDestinationSize(subtitleArray[i]).y * 1.5)};	//Center of the subtitles
+				numSubtitles = 1;	//This'll probably cause a memory leak, but who cares if it's at the end of the program.
+				subtitleArray[0].text = "What the hell is this!";
+				//break;
+				
+				LoadOverlayWindow(true);
+			}
+		}
+	}
 	
-	const Vector2 subtitlePosition = {(subtitleBoundingBoxExtra.x / 2), (subtitleBoundingBoxExtra.y / 2) + subtitleBoundingBox.y};	//Position of the subtitles inside the texture buffer
+	bool hoveringOver = false;
+	for(size_t i = 0; i < numSubtitles; ++i){	//Only the first one
+		if(IsCursorOnScreen()){
+			if(pointIsInRectangle(GetMousePosition(), rectangleFromSizeCenteredAroundPosition(subtitleInstanceDestinationSize(subtitleArray[i]), subtitleArray[i].settings.position))){
+				hoveringOver = true;
+			}
+		}
+		UpdateSubtitleInstance(subtitleArray + i);
+	}
+	SetMouseCursor(hoveringOver? MOUSE_CURSOR_POINTING_HAND : MOUSE_CURSOR_DEFAULT);
+}
+
+void DrawSubtitles(){
+	for(size_t i = 0; i < numSubtitles; ++i){	//Only the first one
+		DrawSubtitleInstance(subtitleArray[i]);
+	}
+}
+
+void UpdateSubtitleInstance(SubtitleInstance* instance){
+	Font* font = fontArray[instance->font];
+	const Vector2 subtitleBoundingBox = MeasureTextEx(*font, instance->text, instance->settings.SUBTITLE_FONT_SIZE, 5);
+	printVector2("Subtitle bounding box", subtitleBoundingBox);
+	const Vector2 subtitleBoundingBoxExtra = instance->settings.subtitleBoundingBoxExtra;
+	printVector2("Subtitle bounding box extra", subtitleBoundingBoxExtra);
+	const Color subtitleTextColor = (instance->settings.RAINBOW)? ColorFromHSV(GetTime() * 500.0, 1, 1) : instance->settings.textColor;
 	
-	UnloadRenderTexture(target);
-	targetDimensions = (Vector2){subtitleBoundingBox.x + subtitleBoundingBoxExtra.x, subtitleBoundingBox.y + subtitleBoundingBoxExtra.y};
-	target = LoadRenderTexture(targetDimensions.x, targetDimensions.y);
+	//const Vector2 subtitlePosition = {(subtitleBoundingBoxExtra.x / 2), (subtitleBoundingBoxExtra.y / 2) + subtitleBoundingBox.y};	//Position of the subtitles inside the texture buffer
+	const Vector2 subtitlePosition = {subtitleBoundingBoxExtra.x / 2, subtitleBoundingBoxExtra.y / 2};
+	printVector2("Subtitle position", subtitlePosition);
+	
+	UnloadRenderTexture(instance->target);
+	instance->targetDimensions = (Vector2){subtitleBoundingBox.x + subtitleBoundingBoxExtra.x, subtitleBoundingBox.y + subtitleBoundingBoxExtra.y};
+	instance->target = LoadRenderTexture(instance->targetDimensions.x, instance->targetDimensions.y);
 	//Drawing to the texture
-	BeginTextureMode(target);
-	if(BACKGROUND){
-		ClearBackground(subtitleBoxColor);
+	BeginTextureMode(instance->target);
+	if(instance->settings.BACKGROUND){
+		ClearBackground(instance->settings.subtitleBoxColor);
 	}else{
 		ClearBackground(BLANK);	//Still need to clear it to get rid of anything
 	}
-	DrawTextEx(subtitleFont, subtitleText, (Vector2){subtitleBoundingBoxExtra.x / 2, subtitleBoundingBoxExtra.y / 2}, SUBTITLE_FONT_SIZE, 5, subtitleTextColor);
+	DrawTextEx(*font, instance->text, subtitlePosition, instance->settings.SUBTITLE_FONT_SIZE, 5, subtitleTextColor);
 	EndTextureMode();
 }
 
-Rectangle rectangleFromSizeAndPosition(Vector2 size, Vector2 position){
-	return (Rectangle){position.x, position.y, size.x, size.y};
-}
-Rectangle rectangleFromSizeCenteredAroundPosition(Vector2 size, Vector2 position){
-	return rectangleFromSizeAndPosition(size, (Vector2){position.x - (size.x / 2), position.y - (size.y / 2)});
-}
-
-bool pointIsInRectangle(Vector2 point, Rectangle rect){
-	return (point.x >= rect.x && point.x <= rect.x + rect.width) && (point.y >= rect.y && point.y <= rect.y + rect.height);
-}
-
-void DrawSubtitleTexture(){
-	BeginDrawing();
-	//Drawing the texture to the frame buffer
-	if(OVERLAY_MODE){
-		ClearBackground(BLANK);
-	}else{
-		ClearBackground(PINK);
-	}
-	const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
+void DrawSubtitleInstance(SubtitleInstance instance){
 	const float scale = 0.5f;
-	const Vector2 destinationSize = {targetDimensions.x * scale, targetDimensions.y * scale};
-	const Vector2 subtitlePosition = {center.x, GetScreenHeight() - (destinationSize.y * 1.5)};	//Center of the subtitles
-	const Rectangle subtitleDestination = rectangleFromSizeCenteredAroundPosition(destinationSize, subtitlePosition);
+	const Vector2 destinationSize = subtitleInstanceDestinationSize(instance);
+	const Rectangle subtitleDestination = subtitleInstanceDestination(instance);
+	printRectangle("Subtitle destination: ", subtitleDestination);
 	
-	if(OUTLINE){
+	if(instance.settings.OUTLINE){
 		//We put this in the draw loop so the amount of border can change while running.
 		const float tScale[2] = { (float)destinationSize.x, (float)destinationSize.y };
 		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "textureSize"), tScale, SHADER_UNIFORM_VEC2);
-		const float outlineSize = OUTLINE_DISTANCE;	//GLSL max int is 255
+		const float outlineSize = instance.settings.OUTLINE_DISTANCE;	//GLSL max int is 255
 		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "outlineSize"), &outlineSize, SHADER_UNIFORM_FLOAT);
 		const float outlineColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};	//Hoping that 1 is 100% opacity
 		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "outlineColor"), outlineColor, SHADER_UNIFORM_VEC4);
 		
 		BeginShaderMode(outlineShader);
 	}
-	if(AROUND_SHADOW){
+	if(instance.settings.AROUND_SHADOW){
 		//We put this in the draw loop so the amount of border can change while running.
 		const float tScale[2] = { (float)destinationSize.x, (float)destinationSize.y };
 		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "textureSize"), tScale, SHADER_UNIFORM_VEC2);
-		const float outlineSize = AROUND_SHADOW_DISTANCE;	//GLSL max int is 255
+		const float outlineSize = instance.settings.AROUND_SHADOW_DISTANCE;	//GLSL max int is 255
 		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "outlineSize"), &outlineSize, SHADER_UNIFORM_FLOAT);
 		const float outlineColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};	//Hoping that 1 is 100% opacity
 		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "outlineColor"), outlineColor, SHADER_UNIFORM_VEC4);
@@ -98,36 +270,27 @@ void DrawSubtitleTexture(){
 		BeginShaderMode(aroundShadowShader);
 	}
 	DrawTexturePro(
-		target.texture,
-		(Rectangle){0, 0, targetDimensions.x, -targetDimensions.y},
+		instance.target.texture,
+		(Rectangle){0, 0, instance.targetDimensions.x, -instance.targetDimensions.y},
 		subtitleDestination,
 		(Vector2){0, 0},
 		0, //Rotation
 		WHITE	//Color
 	);
-	if(OUTLINE || AROUND_SHADOW){
+	if(instance.settings.OUTLINE || instance.settings.AROUND_SHADOW){
 		EndShaderMode();
 	}
-	
-	if(IsCursorOnScreen()){
-		if(pointIsInRectangle(GetMousePosition(), subtitleDestination)){
-			SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
-		}else{
-			SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-		}
-	}
-	
-	EndDrawing();
 }
 
 void UnloadSubtitles(){
+	for(size_t i = 0; i < numSubtitles; ++i){
+		UnloadSubtitleInstance(subtitleArray[i]);
+	}
 	UnloadFont(subtitleFont);
-	UnloadRenderTexture(target);
-	
-	if(OUTLINE){
-		UnloadShader(outlineShader);
-	}
-	if(AROUND_SHADOW){
-		UnloadShader(aroundShadowShader);
-	}
+	UnloadSubtitleInstance(subtitleArray[0]);
+	free(subtitleArray);
+	free(fontArray);
+
+	//UnloadShader(outlineShader);
+	//UnloadShader(aroundShadowShader);
 }
