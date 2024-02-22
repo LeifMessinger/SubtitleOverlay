@@ -8,7 +8,7 @@
 
 const SubtitleSettings defaults = {
 	100.0f,	//Font size
-	0.5f,	//Text scale
+	0.333f,	//Text scale
 	{0, 0},	//Text position
 	
 	WHITE, //Subtitle color
@@ -40,7 +40,7 @@ void setSubtitleSettings(const SubtitleSettings otherSettings){
 }
 
 //WINDOW
-#define FRAME_RATE 100
+#define FRAME_RATE 5
 #define GET_INTO_IT false
 #define BORDERLESS_WINDOW_MODE false
 

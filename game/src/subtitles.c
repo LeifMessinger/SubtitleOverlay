@@ -1,4 +1,5 @@
 #include "subtitles.h"
+#include "live_subtitles.h"
 #include <assert.h>
 #include <math.h>       // Required for: sinf(), cosf(), tan(), atan2f(), sqrtf(), floor(), fminf(), fmaxf(), fabsf()
 
@@ -200,12 +201,17 @@ void UpdateSubtitles(){
 		}
 	}
 	
+	LoadLiveSubtitles();
 	bool hoveringOver = false;
 	for(size_t i = 0; i < numSubtitles; ++i){	//Only the first one
 		if(IsCursorOnScreen()){
 			if(pointIsInRectangle(GetMousePosition(), rectangleFromSizeCenteredAroundPosition(subtitleInstanceDestinationSize(subtitleArray[i]), subtitleArray[i].settings.position))){
 				hoveringOver = true;
 			}
+		}
+		if(isOverlayMode()){	//Sample text if not overlay
+			//TODO: Implement wait time here
+			subtitleArray[i].text = getLiveSubtitles();
 		}
 		UpdateSubtitleInstance(subtitleArray + i);
 	}
