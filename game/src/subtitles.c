@@ -27,7 +27,7 @@ void LoadSubtitles(SubtitleSettings settings){
 	numFonts = 1;
 	
 	SubtitleSettings bunchOfSettings[] = {
-		(SubtitleSettings){	//Nothing
+		(SubtitleSettings){	//Default
 			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
 			initSubtitleSettings().textScale,	//Font size
 			initSubtitleSettings().position,	//Text position
@@ -186,13 +186,16 @@ void UpdateSubtitles(){
 		for(size_t i = 0; i < numSubtitles; ++i){
 			if(pointIsInRectangle(GetMousePosition(), subtitleInstanceDestination(subtitleArray[i]))){
 		const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
-				subtitleArray[0].settings = subtitleArray[i].settings;
-				subtitleArray[0].settings.position = (Vector2){center.x, GetScreenHeight() - (subtitleInstanceDestinationSize(subtitleArray[i]).y * 1.5)};	//Center of the subtitles
+				SubtitleSettings favorite = subtitleArray[i].settings;
+				
+				UnloadSubtitles();
+				LoadOverlayWindow(true);
+				LoadSubtitles(favorite);
+				
+				subtitleArray[0].settings = favorite;	//Should already be like that
+				subtitleArray[0].settings.position = (Vector2){center.x, GetScreenHeight() - (favorite.SUBTITLE_FONT_SIZE * favorite.textScale * 1.5)};	//Center of the subtitles
 				numSubtitles = 1;	//This'll probably cause a memory leak, but who cares if it's at the end of the program.
 				subtitleArray[0].text = "What the hell is this!";
-				//break;
-				
-				LoadOverlayWindow(true);
 			}
 		}
 	}

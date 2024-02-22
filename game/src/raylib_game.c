@@ -44,6 +44,7 @@ void LoadGameShit(){
 void UpdateDrawFrame(){	//GetFrameTime gives you frame time
 	if(isOverlayMode()){
 		ClearBackground(BLANK);
+		//ClearBackground((Color){255, 255, 255, 50});
 	}else{
 		ClearBackground(PINK);
 	}

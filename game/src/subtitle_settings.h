@@ -40,6 +40,7 @@ enum {
 };
 
 void LoadOverlayWindow(bool overlayMode);
+bool isOverlayMode();
 
 SubtitleInstance initSubtitleInstance(SubtitleSettings settings, int font);	//Font can be NULL
 
@@ -57,7 +58,5 @@ Rectangle subtitleInstanceDestination(const SubtitleInstance instance);
 const SubtitleSettings initSubtitleSettings();
 const SubtitleSettings getSubtitleSettings();	//We're gonna hope that the C compiler removes the unnecessary copying
 void setSubtitleSettings(const SubtitleSettings);
-
-bool isOverlayMode();
 
 #endif
