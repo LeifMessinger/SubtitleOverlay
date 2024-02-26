@@ -1,4 +1,4 @@
-#include "subtitles.h"
+#include "subtitles.h"	//Includes subtitle_settings.h too
 #include "live_subtitles.h"
 #include <assert.h>
 #include <math.h>       // Required for: sinf(), cosf(), tan(), atan2f(), sqrtf(), floor(), fminf(), fmaxf(), fabsf()
@@ -167,7 +167,7 @@ void LoadSubtitles(SubtitleSettings settings){
 		const float turns = (float)i / (float)numSubtitles;
 		const float radius = 300.0f;
 		bunchOfSettings[i].position = (Vector2){center.x + cosf(turns * 2 * PI) * radius, center.y + sinf(turns * 2 * PI) * radius};
-		printVector2("Sub position", bunchOfSettings[i].position);
+		//printVector2("Sub position", bunchOfSettings[i].position);
 	}
 	
 	subtitleArray = (SubtitleInstance*)calloc(numSubtitles, sizeof(SubtitleInstance));
@@ -219,6 +219,7 @@ void UpdateSubtitles(){
 }
 
 void DrawSubtitles(){
+	if(isOverlayMode() && (!isThereLiveSubtitles())) return;
 	for(size_t i = 0; i < numSubtitles; ++i){	//Only the first one
 		DrawSubtitleInstance(subtitleArray[i]);
 	}
@@ -227,14 +228,14 @@ void DrawSubtitles(){
 void UpdateSubtitleInstance(SubtitleInstance* instance){
 	Font* font = fontArray[instance->font];
 	const Vector2 subtitleBoundingBox = MeasureTextEx(*font, instance->text, instance->settings.SUBTITLE_FONT_SIZE, 5);
-	printVector2("Subtitle bounding box", subtitleBoundingBox);
+	//printVector2("Subtitle bounding box", subtitleBoundingBox);
 	const Vector2 subtitleBoundingBoxExtra = instance->settings.subtitleBoundingBoxExtra;
-	printVector2("Subtitle bounding box extra", subtitleBoundingBoxExtra);
+	//printVector2("Subtitle bounding box extra", subtitleBoundingBoxExtra);
 	const Color subtitleTextColor = (instance->settings.RAINBOW)? ColorFromHSV(GetTime() * 500.0, 1, 1) : instance->settings.textColor;
 	
 	//const Vector2 subtitlePosition = {(subtitleBoundingBoxExtra.x / 2), (subtitleBoundingBoxExtra.y / 2) + subtitleBoundingBox.y};	//Position of the subtitles inside the texture buffer
 	const Vector2 subtitlePosition = {subtitleBoundingBoxExtra.x / 2, subtitleBoundingBoxExtra.y / 2};
-	printVector2("Subtitle position", subtitlePosition);
+	//printVector2("Subtitle position", subtitlePosition);
 	
 	UnloadRenderTexture(instance->target);
 	instance->targetDimensions = (Vector2){subtitleBoundingBox.x + subtitleBoundingBoxExtra.x, subtitleBoundingBox.y + subtitleBoundingBoxExtra.y};

@@ -1,10 +1,11 @@
 #include "live_subtitles.h"
+#include "timekeeper.h"
 #include <stdio.h>
 #include <stdlib.h>	//atol, getenv
 #include <string.h>
 
 char* liveSubtitles = NULL;
-long int waitUntil = 0;
+long long int waitUntil = 0;
 
 void UnloadLiveSubtitles(){
 	free(liveSubtitles);	//Fine to free a null pointer
@@ -32,7 +33,7 @@ const char* LoadLiveSubtitles(){
 	}else{
 		fread(liveSubtitles, LIVE_SUBTITLES_BUFFER_SIZE, 1, subtitleWaitFile);
 		fclose(subtitleWaitFile);
-		waitUntil = atol(liveSubtitles);	//Returns 0 on error, which is fine.
+		waitUntil = atoll(liveSubtitles);	//Returns 0 on error, which is fine.
 	}
 	
 	//Build the path in liveSubtitles cause why not
@@ -62,6 +63,9 @@ const char* LoadLiveSubtitles(){
 const char* getLiveSubtitles(){
 	return liveSubtitles;
 }
-long getLiveSubtitlesWaitTime(){	//Alarm time.
+long long getLiveSubtitlesWaitTime(){	//Alarm time.
 	return waitUntil;
+}
+bool isThereLiveSubtitles(){
+	return !isPastTime(getLiveSubtitlesWaitTime());
 }

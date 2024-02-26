@@ -1,5 +1,5 @@
-#ifndef LIVE_SUBTITLES_H
-#define LIVE_SUBTITLES_H
+#ifndef TIMEKEEPER_H
+#define TIMEKEEPER_H
 
 #if (defined(__STDC__) && __STDC_VERSION__ >= 199901L) || (defined(_MSC_VER) && _MSC_VER >= 1800)
     #include <stdbool.h>
@@ -9,14 +9,6 @@
     #define RL_BOOL_TYPE
 #endif
 
-#define LIVE_SUBTITLES_BUFFER_SIZE (1024 * 3)
-
-void UnloadLiveSubtitles();
-
-const char* LoadLiveSubtitles();
-
-const char* getLiveSubtitles();
-long long getLiveSubtitlesWaitTime();
-bool isThereLiveSubtitles();
+bool isPastTime(long long inputMilliseconds);
 
 #endif
