@@ -19,7 +19,12 @@ int numSubtitles = 0;
 #endif
 
 void LoadSubtitles(SubtitleSettings settings){
-	subtitleFont = LoadFontEx("resources/fonts/RoadgeekMittelschrift.ttf", settings.SUBTITLE_FONT_SIZE, NULL, 0);
+	int extraCodePoints[] = {0x2018, 0x2019, 0x201A, 0x201B, 0x201C, 0x201D, 0x201E, 0x201F, 0x2047, 0x2048, 0x2049};
+	size_t extraCodePointsSize = (sizeof(extraCodePoints) / sizeof(int));
+	int* codepoints = (int *)RL_MALLOC((95*sizeof(int)) + extraCodePointsSize);
+	for (int i = 0; i < 95; i++) codepoints[i] = i + 32;
+	for (int i = 0; i < extraCodePointsSize; i++) codepoints[i] = extraCodePoints[i];
+	subtitleFont = LoadFontEx("resources/fonts/RoadgeekMittelschrift.ttf", settings.SUBTITLE_FONT_SIZE, codepoints, 95 + extraCodePointsSize);
 	assert(IsFontReady(subtitleFont));
 	
 	fontArray = (Font**)calloc(1, sizeof(Font*));
