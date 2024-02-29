@@ -18,6 +18,30 @@ int numSubtitles = 0;
     #define GLSL_VERSION            100
 #endif
 
+void SelectPreset(SubtitleInstance bruh){
+	const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
+	SubtitleSettings favorite = bruh.settings;
+	
+	UnloadSubtitles();
+	LoadOverlayWindow(true);
+	LoadSubtitles(favorite);
+	
+	subtitleArray[0].font = bruh.font;
+	subtitleArray[0].settings = favorite;	//Should already be like that
+	subtitleArray[0].settings.position = (Vector2){center.x, GetScreenHeight() - (favorite.SUBTITLE_FONT_SIZE * favorite.textScale * 1.5)};	//Center of the subtitles
+	numSubtitles = 1;	//This'll probably cause a memory leak, but who cares if it's at the end of the program.
+	subtitleArray[0].text = "What the hell is this!";
+}
+void SelectFont(SubtitleInstance bruh);
+void SelectFont(SubtitleInstance bruh){
+	for(size_t i = 0; i < numSubtitles; ++i){
+		if(subtitleArray[i].onclick != (*SelectFont)){
+			subtitleArray[i].font = bruh.font;
+			subtitleArray[i].settings.SUBTITLE_FONT_SIZE = bruh.settings.SUBTITLE_FONT_SIZE;
+		}
+	}
+}
+
 void LoadSubtitles(SubtitleSettings settings){
 	int extraCodePoints[] = {0x2018, 0x2019, 0x201A, 0x201B, 0x201C, 0x201D, 0x201E, 0x201F, 0x2047, 0x2048, 0x2049};
 	size_t extraCodePointsSize = (sizeof(extraCodePoints) / sizeof(int));
@@ -26,11 +50,12 @@ void LoadSubtitles(SubtitleSettings settings){
 	for (int i = 0; i < extraCodePointsSize; i++) codepoints[i] = extraCodePoints[i];
 	
 	const char* fonts[] = {"resources/fonts/RoadgeekMittelschrift.ttf", "resources/fonts/amigaForeverPro.ttf"};
-	numFonts = (sizeof(fonts) / sizeof(const char*));
+	const int fontSizes[] = {100, 50};
+	numFonts = FONT_ENUM_SIZE;	//Edit subtitle_settings.h enum to add a font.
 	fontArray = (Font*)RL_CALLOC(numFonts, sizeof(Font));
 	assert(fontArray != NULL);
 	for(size_t i = 0; i < numFonts; ++i){
-		fontArray[i] = LoadFontEx("resources/fonts/RoadgeekMittelschrift.ttf", settings.SUBTITLE_FONT_SIZE, codepoints, 95 + extraCodePointsSize);
+		fontArray[i] = LoadFontEx(fonts[i], fontSizes[i], codepoints, 95 + extraCodePointsSize);
 		assert(IsFontReady(fontArray[i]));
 	}
 	
@@ -178,11 +203,22 @@ void LoadSubtitles(SubtitleSettings settings){
 		bunchOfSettings[i].position = (Vector2){center.x + cosf(turns * 2 * PI) * radius, center.y + sinf(turns * 2 * PI) * radius};
 		//printVector2("Sub position", bunchOfSettings[i].position);
 	}
+	numSubtitles += numFonts;
 	
 	subtitleArray = (SubtitleInstance*)calloc(numSubtitles, sizeof(SubtitleInstance));
 	assert(subtitleArray != NULL);
-	for(size_t i = 0; i < numSubtitles; ++i){
+	for(size_t i = 0; i < numSubtitles - numFonts; ++i){
 		subtitleArray[i] = initSubtitleInstance(bunchOfSettings[i], DEFAULT_FONT);
+		subtitleArray[i].onclick = *SelectPreset;
+	}
+	for(size_t i = numSubtitles - numFonts; i < numSubtitles; ++i){
+		const size_t fontId = i - (numSubtitles - numFonts);
+		subtitleArray[i] = initSubtitleInstance(initSubtitleSettings(), fontId);
+		const Vector2 padding = {200, 100};	//For whatever reason, I gotta add 10.
+		subtitleArray[i].settings.position = (Vector2){padding.x, padding.y + (fontId * subtitleArray[i].settings.SUBTITLE_FONT_SIZE)};
+		//printVector2("Sub position", bunchOfSettings[i].position);
+		subtitleArray[i].onclick = *SelectFont;
+		subtitleArray[i].settings.SUBTITLE_FONT_SIZE = fontSizes[fontId];
 	}
 
 	outlineShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/outline.fs", GLSL_VERSION));
@@ -195,17 +231,10 @@ void UpdateSubtitles(){
 	if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){	//Doesn't work if in OVERLAY mode
 		for(size_t i = 0; i < numSubtitles; ++i){
 			if(pointIsInRectangle(GetMousePosition(), subtitleInstanceDestination(subtitleArray[i]))){
-		const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
-				SubtitleSettings favorite = subtitleArray[i].settings;
-				
-				UnloadSubtitles();
-				LoadOverlayWindow(true);
-				LoadSubtitles(favorite);
-				
-				subtitleArray[0].settings = favorite;	//Should already be like that
-				subtitleArray[0].settings.position = (Vector2){center.x, GetScreenHeight() - (favorite.SUBTITLE_FONT_SIZE * favorite.textScale * 1.5)};	//Center of the subtitles
-				numSubtitles = 1;	//This'll probably cause a memory leak, but who cares if it's at the end of the program.
-				subtitleArray[0].text = "What the hell is this!";
+				void (*onclick)(SubtitleInstance) = subtitleArray[i].onclick;
+				if(onclick){
+					(*onclick)(subtitleArray[i]);
+				}
 			}
 		}
 	}

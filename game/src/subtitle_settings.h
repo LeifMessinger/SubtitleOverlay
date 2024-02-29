@@ -26,17 +26,19 @@ typedef struct {
 	bool RAINBOW;
 } SubtitleSettings;
 
-typedef struct{
+typedef struct SubtitleInstance_info{
 	RenderTexture2D target;
 	Vector2 targetDimensions;	//I don't really need this. I can just use target.texture.width height etc, but I already wrote code like this lol
 	SubtitleSettings settings;
 	int font;
 	const char* text;
-	
+	void (*onclick)(struct SubtitleInstance_info self);	// https://cdecl.org/
 } SubtitleInstance;
 
 enum {
-	DEFAULT_FONT = 0,
+	DEFAULT_FONT = 0,	//ROADGEEK_MITTELSCHRIFT_FONT
+	AMIGA_FONT,
+	FONT_ENUM_SIZE,
 };
 
 void LoadOverlayWindow(bool overlayMode);
