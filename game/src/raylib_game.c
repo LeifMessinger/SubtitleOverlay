@@ -48,7 +48,7 @@ void UpdateDrawFrame(){	//GetFrameTime gives you frame time
 	
 	//if(isOverlayMode()){
 		ClearBackground(BLANK);
-		ClearBackground((Color){100, 100, 100, 0});	//Transparent grey
+		//ClearBackground((Color){100, 100, 100, 0});	//Transparent grey
 		//ClearBackground((Color){255, 255, 255, 100});	//Transparent white
 	//}else{
 		//ClearBackground(PINK);

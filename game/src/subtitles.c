@@ -5,8 +5,8 @@
 
 Shader outlineShader, aroundShadowShader;
 
-Font subtitleFont;
-Font** fontArray = NULL;
+//shut up, it works
+Font* fontArray = NULL;
 int numFonts = 0;
 
 SubtitleInstance* subtitleArray = NULL;
@@ -24,13 +24,17 @@ void LoadSubtitles(SubtitleSettings settings){
 	int* codepoints = (int *)RL_MALLOC((95*sizeof(int)) + extraCodePointsSize);
 	for (int i = 0; i < 95; i++) codepoints[i] = i + 32;
 	for (int i = 0; i < extraCodePointsSize; i++) codepoints[i] = extraCodePoints[i];
-	subtitleFont = LoadFontEx("resources/fonts/RoadgeekMittelschrift.ttf", settings.SUBTITLE_FONT_SIZE, codepoints, 95 + extraCodePointsSize);
-	assert(IsFontReady(subtitleFont));
 	
-	fontArray = (Font**)calloc(1, sizeof(Font*));
+	const char* fonts[] = {"resources/fonts/RoadgeekMittelschrift.ttf", "resources/fonts/amigaForeverPro.ttf"};
+	numFonts = (sizeof(fonts) / sizeof(const char*));
+	fontArray = (Font*)RL_CALLOC(numFonts, sizeof(Font));
 	assert(fontArray != NULL);
-	fontArray[0] = &subtitleFont;
-	numFonts = 1;
+	for(size_t i = 0; i < numFonts; ++i){
+		fontArray[i] = LoadFontEx("resources/fonts/RoadgeekMittelschrift.ttf", settings.SUBTITLE_FONT_SIZE, codepoints, 95 + extraCodePointsSize);
+		assert(IsFontReady(fontArray[i]));
+	}
+	
+	RL_FREE(codepoints);
 	
 	SubtitleSettings bunchOfSettings[] = {
 		(SubtitleSettings){	//Default
@@ -231,7 +235,7 @@ void DrawSubtitles(){
 }
 
 void UpdateSubtitleInstance(SubtitleInstance* instance){
-	Font* font = fontArray[instance->font];
+	Font* font = fontArray + instance->font;
 	const Vector2 subtitleBoundingBox = MeasureTextEx(*font, instance->text, instance->settings.SUBTITLE_FONT_SIZE, 5);
 	//printVector2("Subtitle bounding box", subtitleBoundingBox);
 	const Vector2 subtitleBoundingBoxExtra = instance->settings.subtitleBoundingBoxExtra;
@@ -301,9 +305,12 @@ void UnloadSubtitles(){
 	for(size_t i = 0; i < numSubtitles; ++i){
 		UnloadSubtitleInstance(subtitleArray[i]);
 	}
-	UnloadFont(subtitleFont);
 	UnloadSubtitleInstance(subtitleArray[0]);
+	
 	free(subtitleArray);
+	for(size_t i = 0; i < numFonts; ++i){
+		UnloadFont(fontArray[i]);
+	}
 	free(fontArray);
 
 	//UnloadShader(outlineShader);
