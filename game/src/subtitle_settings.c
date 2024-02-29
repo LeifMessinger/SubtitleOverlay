@@ -40,7 +40,7 @@ void setSubtitleSettings(const SubtitleSettings otherSettings){
 }
 
 //WINDOW
-#define FRAME_RATE 5
+#define FRAME_RATE 1
 #define GET_INTO_IT false
 #define BORDERLESS_WINDOW_MODE false
 
@@ -56,11 +56,11 @@ void LoadOverlayWindow(bool overlayModeArg){
 	}else{
 		firstTimeOpeningWindow = false;
 	}
+	SetConfigFlags(FLAG_WINDOW_TRANSPARENT); // Configures window to be transparent
+	SetConfigFlags(FLAG_WINDOW_TOPMOST); //Always on top
 	if(overlayModeArg){
-		SetConfigFlags(FLAG_WINDOW_TRANSPARENT); // Configures window to be transparent
-		SetConfigFlags(FLAG_WINDOW_TOPMOST); //Always on top
-		SetConfigFlags(FLAG_WINDOW_MOUSE_PASSTHROUGH);
 		SetConfigFlags(FLAG_WINDOW_UNFOCUSED);	//Probably just use less processing power
+		SetConfigFlags(FLAG_WINDOW_MOUSE_PASSTHROUGH);
 		overlayMode = true;
 	}
 	SetConfigFlags(FLAG_VSYNC_HINT);	//Prevent runaway fps
