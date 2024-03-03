@@ -66,7 +66,7 @@ void LoadOverlayWindow(bool overlayModeArg){
 	SetConfigFlags(FLAG_VSYNC_HINT);	//Prevent runaway fps
 	InitWindow(GetScreenWidth(), GetScreenHeight(), "Transparent");	//It doesn't actually set the height to the monitor height. Frustrating.
 	SetWindowPosition(0, 0);
-	SetWindowState(FLAG_WINDOW_UNDECORATED); // Hide border/titlebar; omit if you want them there.
+	//SetWindowState(FLAG_WINDOW_UNDECORATED); // Breaks on some computers
 	if(BORDERLESS_WINDOW_MODE){
 		SetWindowState(FLAG_BORDERLESS_WINDOWED_MODE); // Hide border/titlebar; omit if you want them there.
 	}else{
