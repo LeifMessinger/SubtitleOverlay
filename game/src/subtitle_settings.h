@@ -32,6 +32,7 @@ typedef struct SubtitleInstance_info{
 	RenderTexture2D target;
 	Vector2 targetDimensions;	//Need it for the clicking hitbox
 	SubtitleSettings settings;
+	bool hasToUpdate;
 	int font;
 	const char* text;
 	void (*onclick)(struct SubtitleInstance_info self);	// https://cdecl.org/

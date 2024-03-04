@@ -69,3 +69,9 @@ long long getLiveSubtitlesWaitTime(){	//Alarm time.
 bool isThereLiveSubtitles(){
 	return !isPastTime(getLiveSubtitlesWaitTime());
 }
+bool thereIsLiveSubtitlesValue = false;
+bool thereIsLiveSubtitles(){
+	const bool result = thereIsLiveSubtitlesValue;
+	thereIsLiveSubtitlesValue = false;
+	return result;
+}

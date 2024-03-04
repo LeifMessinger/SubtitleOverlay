@@ -51,7 +51,7 @@ void setSubtitleSettings(const SubtitleSettings otherSettings){
 }
 
 //WINDOW
-#define FRAME_RATE 1
+#define FRAME_RATE 100
 #define GET_INTO_IT false
 #define BORDERLESS_WINDOW_MODE false
 
@@ -91,7 +91,7 @@ void LoadOverlayWindow(bool overlayModeArg){
 
 
 SubtitleInstance initSubtitleInstance(SubtitleSettings settings, int font){
-	return (SubtitleInstance){LoadRenderTexture(1, 1), {1, 1}, settings, font, "Bruh", NULL};
+	return (SubtitleInstance){LoadRenderTexture(1, 1), {1, 1}, settings, true, font, "Bruh", NULL};
 }
 
 Vector2 subtitleInstanceDestinationSize(const SubtitleInstance instance){

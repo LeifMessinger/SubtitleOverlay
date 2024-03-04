@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <math.h>       // Required for: sinf(), cosf(), tan(), atan2f(), sqrtf(), floor(), fminf(), fmaxf(), fabsf()
 
+#define ifnt(x) if(!(x))
+
 Shader outlineShader, aroundShadowShader;
 
 //shut up, it works
@@ -18,19 +20,43 @@ int numSubtitles = 0;
     #define GLSL_VERSION            100
 #endif
 
+const int fontSizes[] = {100, 50};
+void LoadFonts(){
+	int extraCodePoints[] = {0x2018, 0x2019, 0x201A, 0x201B, 0x201C, 0x201D, 0x201E, 0x201F, 0x2047, 0x2048, 0x2049};
+	size_t extraCodePointsSize = (sizeof(extraCodePoints) / sizeof(int));
+	int* codepoints = (int *)RL_MALLOC((95*sizeof(int)) + extraCodePointsSize);
+	for (int i = 0; i < 95; i++) codepoints[i] = i + 32;
+	for (int i = 0; i < extraCodePointsSize; i++) codepoints[i] = extraCodePoints[i];
+	
+	const char* fonts[] = {"resources/fonts/RoadgeekMittelschrift.ttf", "resources/fonts/amigaForeverPro.ttf"};
+	numFonts = FONT_ENUM_SIZE;	//Edit subtitle_settings.h enum to add a font.
+	fontArray = (Font*)RL_CALLOC(numFonts, sizeof(Font));
+	assert(fontArray != NULL);
+	for(size_t i = 0; i < numFonts; ++i){
+		fontArray[i] = LoadFontEx(fonts[i], fontSizes[i], codepoints, 95 + extraCodePointsSize);
+		assert(IsFontReady(fontArray[i]));
+	}
+	
+	RL_FREE(codepoints);
+}
+
 void SelectPreset(SubtitleInstance bruh){
 	const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
 	SubtitleSettings favorite = bruh.settings;
 	
-	UnloadSubtitles();
+	setSubtitleSettings(favorite);
+	
+	UnloadSubtitles();	//Have to unload the subtitles because loadOverlayWindow closes the window, which unloads raylib.
 	LoadOverlayWindow(true);
-	LoadSubtitles(favorite);
+	//LoadSubtitles(favorite);	Why even do this
+	LoadFonts();
+	subtitleArray = (SubtitleInstance*)RL_CALLOC(1, sizeof(SubtitleInstance));
 	
 	subtitleArray[0].font = bruh.font;
 	subtitleArray[0].settings = favorite;	//Should already be like that
 	// ^ Sets textScale too
 	subtitleArray[0].settings.position = (Vector2){center.x, GetScreenHeight() - (favorite.SUBTITLE_FONT_SIZE * favorite.textScale * 1.5)};	//Center of the subtitles
-	numSubtitles = 1;	//This'll probably cause a memory leak, but who cares if it's at the end of the program.
+	numSubtitles = 1;
 	subtitleArray[0].text = "What the hell is this!";
 }
 void SelectFont(SubtitleInstance bruh){
@@ -38,6 +64,7 @@ void SelectFont(SubtitleInstance bruh){
 		if(subtitleArray[i].onclick != (*SelectFont)){
 			subtitleArray[i].font = bruh.font;
 			subtitleArray[i].settings.SUBTITLE_FONT_SIZE = bruh.settings.SUBTITLE_FONT_SIZE;
+			subtitleArray[i].hasToUpdate = true;
 		}
 	}
 }
@@ -45,6 +72,7 @@ void SelectTextColor(SubtitleInstance bruh){
 	for(size_t i = 0; i < numSubtitles; ++i){
 		if(subtitleArray[i].onclick != (*SelectTextColor)){
 			subtitleArray[i].settings.textColor = bruh.settings.textColor;
+			subtitleArray[i].hasToUpdate = true;
 		}
 	}
 }
@@ -54,6 +82,7 @@ void SelectBackgroundColor(SubtitleInstance bruh){
 			subtitleArray[i].settings.subtitleBoxColor.r = bruh.settings.subtitleBoxColor.r;
 			subtitleArray[i].settings.subtitleBoxColor.g = bruh.settings.subtitleBoxColor.g;
 			subtitleArray[i].settings.subtitleBoxColor.b = bruh.settings.subtitleBoxColor.b;
+			subtitleArray[i].hasToUpdate = true;
 		}
 	}
 }
@@ -63,6 +92,7 @@ void SelectOutlineColor(SubtitleInstance bruh){
 			subtitleArray[i].settings.outlineColor.r = bruh.settings.outlineColor.r;
 			subtitleArray[i].settings.outlineColor.g = bruh.settings.outlineColor.g;
 			subtitleArray[i].settings.outlineColor.b = bruh.settings.outlineColor.b;
+			subtitleArray[i].hasToUpdate = true;
 		}
 	}
 }
@@ -70,139 +100,139 @@ void SelectOutlineColor(SubtitleInstance bruh){
 void LoadSubtitles(SubtitleSettings settings){
 	SubtitleSettings bunchOfSettings[] = {
 		(SubtitleSettings){	//Default
-			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
-			initSubtitleSettings().textScale,	//Font size
-			initSubtitleSettings().position,	//Text position
+			settings.SUBTITLE_FONT_SIZE,	//Font size
+			settings.textScale,	//Font size
+			settings.position,	//Text position
 			
-			initSubtitleSettings().textColor,
+			settings.textColor,
 			
-			initSubtitleSettings().BACKGROUND,	//Background
-			initSubtitleSettings().subtitleBoundingBoxExtra,
-			initSubtitleSettings().subtitleBoxColor,
+			settings.BACKGROUND,	//Background
+			settings.subtitleBoundingBoxExtra,
+			settings.subtitleBoxColor,
 	
-			initSubtitleSettings().OUTLINE,	//Outline
-			initSubtitleSettings().outlineColor,	//Outline
-			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			settings.OUTLINE,	//Outline
+			settings.outlineColor,	//Outline
+			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
-			initSubtitleSettings().AROUND_SHADOW,	//Around shadow
-			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			settings.AROUND_SHADOW,	//Around shadow
+			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
-			initSubtitleSettings().RAINBOW	//Rainbow
+			settings.RAINBOW	//Rainbow
 		}, (SubtitleSettings){	//Nothing
-			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
-			initSubtitleSettings().textScale,	//Font size
-			initSubtitleSettings().position,	//Text position
+			settings.SUBTITLE_FONT_SIZE,	//Font size
+			settings.textScale,	//Font size
+			settings.position,	//Text position
 			
-			initSubtitleSettings().textColor,
+			settings.textColor,
 			
 			false,	//Background
-			initSubtitleSettings().subtitleBoundingBoxExtra,
-			initSubtitleSettings().subtitleBoxColor,
+			settings.subtitleBoundingBoxExtra,
+			settings.subtitleBoxColor,
 	
 			false,	//Outline
-			initSubtitleSettings().outlineColor,	//Outline
-			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			settings.outlineColor,	//Outline
+			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
-			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
 			false	//Rainbow
 		}, (SubtitleSettings){	//Background only
-			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
-			initSubtitleSettings().textScale,	//Font size
-			initSubtitleSettings().position,	//Text position
+			settings.SUBTITLE_FONT_SIZE,	//Font size
+			settings.textScale,	//Font size
+			settings.position,	//Text position
 			
-			initSubtitleSettings().textColor,
+			settings.textColor,
 			
 			true,	//Background
-			initSubtitleSettings().subtitleBoundingBoxExtra,
-			initSubtitleSettings().subtitleBoxColor,
+			settings.subtitleBoundingBoxExtra,
+			settings.subtitleBoxColor,
 	
 			false,	//Outline
-			initSubtitleSettings().outlineColor,	//Outline
-			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			settings.outlineColor,	//Outline
+			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
-			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
 			false	//Rainbow
 		}, (SubtitleSettings){	//Outline only
-			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
-			initSubtitleSettings().textScale,	//Font size
-			initSubtitleSettings().position,	//Text position
+			settings.SUBTITLE_FONT_SIZE,	//Font size
+			settings.textScale,	//Font size
+			settings.position,	//Text position
 			
-			initSubtitleSettings().textColor,
+			settings.textColor,
 			
 			false,	//Background
-			initSubtitleSettings().subtitleBoundingBoxExtra,
-			initSubtitleSettings().subtitleBoxColor,
+			settings.subtitleBoundingBoxExtra,
+			settings.subtitleBoxColor,
 	
 			true,	//Outline
 			BLACK,	//Outline
-			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
-			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
 			false	//Rainbow
 		}, (SubtitleSettings){	//Background and outline
-			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
-			initSubtitleSettings().textScale,	//Font size
-			initSubtitleSettings().position,	//Text position
+			settings.SUBTITLE_FONT_SIZE,	//Font size
+			settings.textScale,	//Font size
+			settings.position,	//Text position
 			
-			initSubtitleSettings().textColor,
+			settings.textColor,
 			
 			true,	//Background
-			initSubtitleSettings().subtitleBoundingBoxExtra,
-			initSubtitleSettings().subtitleBoxColor,
+			settings.subtitleBoundingBoxExtra,
+			settings.subtitleBoxColor,
 	
 			true,	//Outline
 			BLACK,	//Outline
-			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
-			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
-			initSubtitleSettings().RAINBOW	//Rainbow
+			settings.RAINBOW	//Rainbow
 		}, /*(SubtitleSettings){	//Around shadow
-			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
-			initSubtitleSettings().position,	//Text position
-			initSubtitleSettings().OVERLAY_MODE,	//Overlay
-			initSubtitleSettings().BORDERLESS_WINDOW_MODE,	//Borderless window (buggy)
-			initSubtitleSettings().FRAME_RATE,	//Frame rate
+			settings.SUBTITLE_FONT_SIZE,	//Font size
+			settings.position,	//Text position
+			settings.OVERLAY_MODE,	//Overlay
+			settings.BORDERLESS_WINDOW_MODE,	//Borderless window (buggy)
+			settings.FRAME_RATE,	//Frame rate
 			
-			initSubtitleSettings().textColor,
+			settings.textColor,
 			
-			initSubtitleSettings().BACKGROUND,	//Background
-			initSubtitleSettings().subtitleBoundingBoxExtra,
-			initSubtitleSettings().subtitleBoxColor,
+			settings.BACKGROUND,	//Background
+			settings.subtitleBoundingBoxExtra,
+			settings.subtitleBoxColor,
 	
-			initSubtitleSettings().OUTLINE,	//Outline
-			initSubtitleSettings().outlineColor,	//Outline
-			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			settings.OUTLINE,	//Outline
+			settings.outlineColor,	//Outline
+			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
-			initSubtitleSettings().AROUND_SHADOW,	//Around shadow
-			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			settings.AROUND_SHADOW,	//Around shadow
+			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
-			initSubtitleSettings().RAINBOW	//Rainbow
+			settings.RAINBOW	//Rainbow
 		},*/
 		(SubtitleSettings){	//Rainbow
-			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
-			initSubtitleSettings().textScale,	//Font size
-			initSubtitleSettings().position,	//Text position
+			settings.SUBTITLE_FONT_SIZE,	//Font size
+			settings.textScale,	//Font size
+			settings.position,	//Text position
 			
-			initSubtitleSettings().textColor,
+			settings.textColor,
 			
-			initSubtitleSettings().BACKGROUND,	//Background
-			initSubtitleSettings().subtitleBoundingBoxExtra,
-			initSubtitleSettings().subtitleBoxColor,
+			settings.BACKGROUND,	//Background
+			settings.subtitleBoundingBoxExtra,
+			settings.subtitleBoxColor,
 	
-			initSubtitleSettings().OUTLINE,	//Outline
-			initSubtitleSettings().outlineColor,	//Outline
-			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
+			settings.OUTLINE,	//Outline
+			settings.outlineColor,	//Outline
+			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
-			initSubtitleSettings().AROUND_SHADOW,	//Around shadow
-			initSubtitleSettings().AROUND_SHADOW_DISTANCE,		//Around shadow distance
+			settings.AROUND_SHADOW,	//Around shadow
+			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
 			true	//Rainbow
 		}
@@ -218,7 +248,6 @@ void LoadSubtitles(SubtitleSettings settings){
 		bunchOfSettings[i].position = (Vector2){center.x + cosf(turns * 2 * PI) * radius, center.y + sinf(turns * 2 * PI) * radius};
 		//printVector2("Sub position", bunchOfSettings[i].position);
 	}
-	numSubtitles += numFonts;
 	Color customizableColors[] = {LIGHTGRAY,
 		//GRAY,
 		//DARKGRAY,
@@ -248,10 +277,13 @@ void LoadSubtitles(SubtitleSettings settings){
 	size_t customizableColorsSize = (sizeof(customizableColors) / sizeof(Color));
 	numSubtitles += customizableColorsSize * 3U;	//*3U because outline, text color and background color
 	
+	LoadFonts();
+	numSubtitles += numFonts;
+	
 	subtitleArray = (SubtitleInstance*)calloc(numSubtitles, sizeof(SubtitleInstance));
 	assert(subtitleArray != NULL);
 	//-----------	Presets
-	for(size_t i = 0; i < numSubtitles - numFonts; ++i){
+	for(size_t i = 0; i < numPresets; ++i){
 		subtitleArray[i] = initSubtitleInstance(bunchOfSettings[i], DEFAULT_FONT);
 		subtitleArray[i].onclick = *SelectPreset;
 	}
@@ -260,7 +292,7 @@ void LoadSubtitles(SubtitleSettings settings){
 	
 	SubtitleInstance* outlineColorChoices = subtitleArray + numPresets;
 	for(size_t i = 0; i < customizableColorsSize; ++i){
-		outlineColorChoices[i] = initSubtitleInstance(initSubtitleSettings(), DEFAULT_FONT);
+		outlineColorChoices[i] = initSubtitleInstance(settings, DEFAULT_FONT);
 		const Vector2 padding = {300, 50};	//For whatever reason, I gotta add 10.
 		outlineColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, padding.y + (i * spread * outlineColorChoices[i].settings.SUBTITLE_FONT_SIZE * outlineColorChoices[i].settings.textScale)};
 		//const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
@@ -273,7 +305,7 @@ void LoadSubtitles(SubtitleSettings settings){
 	
 	SubtitleInstance* backgroundColorChoices = subtitleArray + customizableColorsSize;
 	for(size_t i = 0; i < customizableColorsSize; ++i){
-		backgroundColorChoices[i] = initSubtitleInstance(initSubtitleSettings(), DEFAULT_FONT);
+		backgroundColorChoices[i] = initSubtitleInstance(settings, DEFAULT_FONT);
 		const Vector2 padding = {200, 50};	//For whatever reason, I gotta add 10.
 		backgroundColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, padding.y + (i * spread * backgroundColorChoices[i].settings.SUBTITLE_FONT_SIZE * backgroundColorChoices[i].settings.textScale)};
 		//const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
@@ -285,7 +317,7 @@ void LoadSubtitles(SubtitleSettings settings){
 	
 	SubtitleInstance* textColorChoices = backgroundColorChoices + customizableColorsSize;
 	for(size_t i = 0; i < customizableColorsSize; ++i){
-		textColorChoices[i] = initSubtitleInstance(initSubtitleSettings(), DEFAULT_FONT);
+		textColorChoices[i] = initSubtitleInstance(settings, DEFAULT_FONT);
 		const Vector2 padding = {100, 50};	//For whatever reason, I gotta add 10.
 		textColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, padding.y + (i * spread * textColorChoices[i].settings.SUBTITLE_FONT_SIZE * textColorChoices[i].settings.textScale)};
 		//printVector2("Sub position", bunchOfSettings[i].position);
@@ -294,27 +326,9 @@ void LoadSubtitles(SubtitleSettings settings){
 	}
 	
 	//-----------	Font choices
-	int extraCodePoints[] = {0x2018, 0x2019, 0x201A, 0x201B, 0x201C, 0x201D, 0x201E, 0x201F, 0x2047, 0x2048, 0x2049};
-	size_t extraCodePointsSize = (sizeof(extraCodePoints) / sizeof(int));
-	int* codepoints = (int *)RL_MALLOC((95*sizeof(int)) + extraCodePointsSize);
-	for (int i = 0; i < 95; i++) codepoints[i] = i + 32;
-	for (int i = 0; i < extraCodePointsSize; i++) codepoints[i] = extraCodePoints[i];
-	
-	const char* fonts[] = {"resources/fonts/RoadgeekMittelschrift.ttf", "resources/fonts/amigaForeverPro.ttf"};
-	const int fontSizes[] = {100, 50};
-	numFonts = FONT_ENUM_SIZE;	//Edit subtitle_settings.h enum to add a font.
-	fontArray = (Font*)RL_CALLOC(numFonts, sizeof(Font));
-	assert(fontArray != NULL);
-	for(size_t i = 0; i < numFonts; ++i){
-		fontArray[i] = LoadFontEx(fonts[i], fontSizes[i], codepoints, 95 + extraCodePointsSize);
-		assert(IsFontReady(fontArray[i]));
-	}
-	
-	RL_FREE(codepoints);
-	
 	SubtitleInstance* fontChoices = textColorChoices + customizableColorsSize;
 	for(size_t i = 0; i < numFonts; ++i){
-		fontChoices[i] = initSubtitleInstance(initSubtitleSettings(), i);
+		fontChoices[i] = initSubtitleInstance(settings, i);
 		const Vector2 padding = {200, 200};	//For whatever reason, I gotta add 10.
 		fontChoices[i].settings.position = (Vector2){padding.x, padding.y + (i * spread * fontChoices[i].settings.SUBTITLE_FONT_SIZE * fontChoices[i].settings.textScale)};
 		//printVector2("Sub position", bunchOfSettings[i].position);
@@ -329,28 +343,31 @@ void LoadSubtitles(SubtitleSettings settings){
 }
 
 void UpdateSubtitles(){
-	if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){	//Doesn't work if in OVERLAY mode
+	bool hoveringOver = false;
+	if(IsCursorOnScreen()){
+		#pragma omp parallel for
 		for(size_t i = 0; i < numSubtitles; ++i){
-			if(pointIsInRectangle(GetMousePosition(), subtitleInstanceDestination(subtitleArray[i]))){
-				void (*onclick)(SubtitleInstance) = subtitleArray[i].onclick;
-				if(onclick){
-					(*onclick)(subtitleArray[i]);
+			if(pointIsInRectangle(GetMousePosition(), rectangleFromSizeCenteredAroundPosition(subtitleInstanceDestinationSize(subtitleArray[i]), subtitleArray[i].settings.position))){
+				if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){	//Doesn't work if in OVERLAY mode
+					void (*onclick)(SubtitleInstance) = subtitleArray[i].onclick;
+					if(onclick){
+						#pragma omp critical
+						(*onclick)(subtitleArray[i]);	//Could possibly cause problems if two subtitles overlap
+					}
 				}
+				hoveringOver = true;
 			}
 		}
 	}
 	
 	LoadLiveSubtitles();
-	bool hoveringOver = false;
+	const bool updateSubtitleText = thereIsLiveSubtitles();
+	#pragma omp parallel for
 	for(size_t i = 0; i < numSubtitles; ++i){	//Only the first one
-		if(IsCursorOnScreen()){
-			if(pointIsInRectangle(GetMousePosition(), rectangleFromSizeCenteredAroundPosition(subtitleInstanceDestinationSize(subtitleArray[i]), subtitleArray[i].settings.position))){
-				hoveringOver = true;
-			}
-		}
-		if(isOverlayMode()){	//Sample text if not overlay
+		if(isOverlayMode() && updateSubtitleText){	//Sample text if not overlay
 			//TODO: Implement wait time here
 			subtitleArray[i].text = getLiveSubtitles();
+			subtitleArray[i].hasToUpdate = true;
 		}
 		UpdateSubtitleInstance(subtitleArray + i);
 	}
@@ -365,6 +382,9 @@ void DrawSubtitles(){
 }
 
 void UpdateSubtitleInstance(SubtitleInstance* instance){
+	ifnt(instance->hasToUpdate || instance->settings.RAINBOW) return;
+	instance->hasToUpdate = false;
+	
 	Font* font = fontArray + instance->font;
 	const Vector2 subtitleBoundingBox = MeasureTextEx(*font, instance->text, instance->settings.SUBTITLE_FONT_SIZE, 5);
 	//printVector2("Subtitle bounding box", subtitleBoundingBox);

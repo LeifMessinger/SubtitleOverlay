@@ -18,5 +18,6 @@ const char* LoadLiveSubtitles();
 const char* getLiveSubtitles();
 long long getLiveSubtitlesWaitTime();
 bool isThereLiveSubtitles();
+bool thereIsLiveSubtitles();	//Subtitle text changed since the last time called
 
 #endif

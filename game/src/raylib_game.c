@@ -41,7 +41,6 @@ void UpdateDrawFrame(){	//GetFrameTime gives you frame time
 	UpdateSubtitles();	//Subtitle logic
 	
 	BeginDrawing();
-	
 	//if(isOverlayMode()){
 		ClearBackground(BLANK);
 		//ClearBackground((Color){100, 100, 100, 0});	//Transparent grey
@@ -51,6 +50,7 @@ void UpdateDrawFrame(){	//GetFrameTime gives you frame time
 	//}
 	
 	DrawSubtitles();
+	DrawFPS(50, 50);
 	EndDrawing();
 }
 
