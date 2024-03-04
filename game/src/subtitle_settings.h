@@ -2,6 +2,7 @@
 #define SUBTITLE_SETTINGS_H
 
 #include "raylib.h"	//Literally just for the bools
+#include <stdlib.h>	//calloc
 
 //Have to call it MY_CONFIG because config.h exists in raylib
 
@@ -17,6 +18,7 @@ typedef struct {
 	Color subtitleBoxColor;
 
 	bool OUTLINE;
+	Color outlineColor;
 	float OUTLINE_DISTANCE;
 
 	bool AROUND_SHADOW;
@@ -28,7 +30,7 @@ typedef struct {
 
 typedef struct SubtitleInstance_info{
 	RenderTexture2D target;
-	Vector2 targetDimensions;	//I don't really need this. I can just use target.texture.width height etc, but I already wrote code like this lol
+	Vector2 targetDimensions;	//Need it for the clicking hitbox
 	SubtitleSettings settings;
 	int font;
 	const char* text;
@@ -40,6 +42,9 @@ enum {
 	AMIGA_FONT,
 	FONT_ENUM_SIZE,
 };
+
+//Remember to RL_FREE it
+float* RaylibColorToShaderColor(Color color);
 
 void LoadOverlayWindow(bool overlayMode);
 bool isOverlayMode();

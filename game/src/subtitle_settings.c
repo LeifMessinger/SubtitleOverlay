@@ -18,13 +18,24 @@ const SubtitleSettings defaults = {
 	{0, 0, 0, 200}, //Border color
 	
 	false,	//Outline
-	5,		//Outline thiccness (pixels)
+	BLANK,	//Outline
+	2,		//Outline thiccness (pixels)
 	
 	false,	//Around shadow
 	20,		//Around shadow distance
 	
 	false	//Rainbow
 };
+
+//Remember to RL_FREE it
+float* RaylibColorToShaderColor(Color color){
+	float* glslColor = RL_CALLOC(4, sizeof(float));
+	glslColor[0] = (float)color.r / 255.0f;
+	glslColor[1] = (float)color.g / 255.0f;
+	glslColor[2] = (float)color.b / 255.0f;
+	glslColor[3] = (float)color.a / 255.0f;
+	return glslColor;
+}
 
 const SubtitleSettings initSubtitleSettings(){
 	return defaults;
@@ -40,7 +51,7 @@ void setSubtitleSettings(const SubtitleSettings otherSettings){
 }
 
 //WINDOW
-#define FRAME_RATE 10
+#define FRAME_RATE 1
 #define GET_INTO_IT false
 #define BORDERLESS_WINDOW_MODE false
 
@@ -58,6 +69,7 @@ void LoadOverlayWindow(bool overlayModeArg){
 	}
 	SetConfigFlags(FLAG_WINDOW_TRANSPARENT); // Configures window to be transparent
 	SetConfigFlags(FLAG_WINDOW_TOPMOST); //Always on top
+	SetConfigFlags(FLAG_MSAA_4X_HINT);
 	if(overlayModeArg){
 		SetConfigFlags(FLAG_WINDOW_UNFOCUSED);	//Probably just use less processing power
 		SetConfigFlags(FLAG_WINDOW_MOUSE_PASSTHROUGH);
@@ -66,6 +78,7 @@ void LoadOverlayWindow(bool overlayModeArg){
 	SetConfigFlags(FLAG_VSYNC_HINT);	//Prevent runaway fps
 	InitWindow(GetScreenWidth(), GetScreenHeight(), "Transparent");	//It doesn't actually set the height to the monitor height. Frustrating.
 	SetWindowPosition(0, 0);
+	//SetWindowState(FLAG_WINDOW_UNDECORATED); // Breaks on some computers
 	//SetWindowState(FLAG_WINDOW_UNDECORATED); // Breaks on some computers
 	if(BORDERLESS_WINDOW_MODE){
 		SetWindowState(FLAG_BORDERLESS_WINDOWED_MODE); // Hide border/titlebar; omit if you want them there.

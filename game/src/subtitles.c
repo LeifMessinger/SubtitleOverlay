@@ -28,11 +28,11 @@ void SelectPreset(SubtitleInstance bruh){
 	
 	subtitleArray[0].font = bruh.font;
 	subtitleArray[0].settings = favorite;	//Should already be like that
+	// ^ Sets textScale too
 	subtitleArray[0].settings.position = (Vector2){center.x, GetScreenHeight() - (favorite.SUBTITLE_FONT_SIZE * favorite.textScale * 1.5)};	//Center of the subtitles
 	numSubtitles = 1;	//This'll probably cause a memory leak, but who cares if it's at the end of the program.
 	subtitleArray[0].text = "What the hell is this!";
 }
-void SelectFont(SubtitleInstance bruh);
 void SelectFont(SubtitleInstance bruh){
 	for(size_t i = 0; i < numSubtitles; ++i){
 		if(subtitleArray[i].onclick != (*SelectFont)){
@@ -41,26 +41,33 @@ void SelectFont(SubtitleInstance bruh){
 		}
 	}
 }
+void SelectTextColor(SubtitleInstance bruh){
+	for(size_t i = 0; i < numSubtitles; ++i){
+		if(subtitleArray[i].onclick != (*SelectTextColor)){
+			subtitleArray[i].settings.textColor = bruh.settings.textColor;
+		}
+	}
+}
+void SelectBackgroundColor(SubtitleInstance bruh){
+	for(size_t i = 0; i < numSubtitles; ++i){
+		if(subtitleArray[i].onclick != (*SelectBackgroundColor)){
+			subtitleArray[i].settings.subtitleBoxColor.r = bruh.settings.subtitleBoxColor.r;
+			subtitleArray[i].settings.subtitleBoxColor.g = bruh.settings.subtitleBoxColor.g;
+			subtitleArray[i].settings.subtitleBoxColor.b = bruh.settings.subtitleBoxColor.b;
+		}
+	}
+}
+void SelectOutlineColor(SubtitleInstance bruh){
+	for(size_t i = 0; i < numSubtitles; ++i){
+		if(subtitleArray[i].onclick != (*SelectOutlineColor)){
+			subtitleArray[i].settings.outlineColor.r = bruh.settings.outlineColor.r;
+			subtitleArray[i].settings.outlineColor.g = bruh.settings.outlineColor.g;
+			subtitleArray[i].settings.outlineColor.b = bruh.settings.outlineColor.b;
+		}
+	}
+}
 
 void LoadSubtitles(SubtitleSettings settings){
-	int extraCodePoints[] = {0x2018, 0x2019, 0x201A, 0x201B, 0x201C, 0x201D, 0x201E, 0x201F, 0x2047, 0x2048, 0x2049};
-	size_t extraCodePointsSize = (sizeof(extraCodePoints) / sizeof(int));
-	int* codepoints = (int *)RL_MALLOC((95*sizeof(int)) + extraCodePointsSize);
-	for (int i = 0; i < 95; i++) codepoints[i] = i + 32;
-	for (int i = 0; i < extraCodePointsSize; i++) codepoints[i] = extraCodePoints[i];
-	
-	const char* fonts[] = {"resources/fonts/RoadgeekMittelschrift.ttf", "resources/fonts/amigaForeverPro.ttf"};
-	const int fontSizes[] = {100, 50};
-	numFonts = FONT_ENUM_SIZE;	//Edit subtitle_settings.h enum to add a font.
-	fontArray = (Font*)RL_CALLOC(numFonts, sizeof(Font));
-	assert(fontArray != NULL);
-	for(size_t i = 0; i < numFonts; ++i){
-		fontArray[i] = LoadFontEx(fonts[i], fontSizes[i], codepoints, 95 + extraCodePointsSize);
-		assert(IsFontReady(fontArray[i]));
-	}
-	
-	RL_FREE(codepoints);
-	
 	SubtitleSettings bunchOfSettings[] = {
 		(SubtitleSettings){	//Default
 			initSubtitleSettings().SUBTITLE_FONT_SIZE,	//Font size
@@ -74,6 +81,7 @@ void LoadSubtitles(SubtitleSettings settings){
 			initSubtitleSettings().subtitleBoxColor,
 	
 			initSubtitleSettings().OUTLINE,	//Outline
+			initSubtitleSettings().outlineColor,	//Outline
 			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			initSubtitleSettings().AROUND_SHADOW,	//Around shadow
@@ -92,6 +100,7 @@ void LoadSubtitles(SubtitleSettings settings){
 			initSubtitleSettings().subtitleBoxColor,
 	
 			false,	//Outline
+			initSubtitleSettings().outlineColor,	//Outline
 			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
@@ -110,6 +119,7 @@ void LoadSubtitles(SubtitleSettings settings){
 			initSubtitleSettings().subtitleBoxColor,
 	
 			false,	//Outline
+			initSubtitleSettings().outlineColor,	//Outline
 			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
@@ -128,6 +138,7 @@ void LoadSubtitles(SubtitleSettings settings){
 			initSubtitleSettings().subtitleBoxColor,
 	
 			true,	//Outline
+			BLACK,	//Outline
 			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
@@ -146,6 +157,7 @@ void LoadSubtitles(SubtitleSettings settings){
 			initSubtitleSettings().subtitleBoxColor,
 	
 			true,	//Outline
+			BLACK,	//Outline
 			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
@@ -166,6 +178,7 @@ void LoadSubtitles(SubtitleSettings settings){
 			initSubtitleSettings().subtitleBoxColor,
 	
 			initSubtitleSettings().OUTLINE,	//Outline
+			initSubtitleSettings().outlineColor,	//Outline
 			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			initSubtitleSettings().AROUND_SHADOW,	//Around shadow
@@ -185,6 +198,7 @@ void LoadSubtitles(SubtitleSettings settings){
 			initSubtitleSettings().subtitleBoxColor,
 	
 			initSubtitleSettings().OUTLINE,	//Outline
+			initSubtitleSettings().outlineColor,	//Outline
 			initSubtitleSettings().OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			initSubtitleSettings().AROUND_SHADOW,	//Around shadow
@@ -195,7 +209,8 @@ void LoadSubtitles(SubtitleSettings settings){
 	};
 	//Spread them out
 	//numSubtitles = 1;
-	numSubtitles = (sizeof(bunchOfSettings) / sizeof(SubtitleSettings));
+	const size_t numPresets = (sizeof(bunchOfSettings) / sizeof(SubtitleSettings));
+	numSubtitles = numPresets;
 	for(size_t i = 0; i < numSubtitles; ++i){
 		const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
 		const float turns = (float)i / (float)numSubtitles;
@@ -204,21 +219,107 @@ void LoadSubtitles(SubtitleSettings settings){
 		//printVector2("Sub position", bunchOfSettings[i].position);
 	}
 	numSubtitles += numFonts;
+	Color customizableColors[] = {LIGHTGRAY,
+		//GRAY,
+		//DARKGRAY,
+		YELLOW,
+		GOLD,
+		ORANGE,
+		//PINK,
+		RED,
+		MAROON,
+		GREEN,
+		LIME,
+		DARKGREEN,
+		SKYBLUE,
+		BLUE,
+		DARKBLUE,
+		PURPLE,
+		VIOLET,
+		DARKPURPLE,
+		BEIGE,
+		//BROWN,
+		//DARKBROWN,
+		WHITE,
+		BLACK,
+		//BLANK,	//If you want to disable an option, pick the matching preset in the center.
+		MAGENTA
+	};
+	size_t customizableColorsSize = (sizeof(customizableColors) / sizeof(Color));
+	numSubtitles += customizableColorsSize * 3U;	//*3U because outline, text color and background color
 	
 	subtitleArray = (SubtitleInstance*)calloc(numSubtitles, sizeof(SubtitleInstance));
 	assert(subtitleArray != NULL);
+	//-----------	Presets
 	for(size_t i = 0; i < numSubtitles - numFonts; ++i){
 		subtitleArray[i] = initSubtitleInstance(bunchOfSettings[i], DEFAULT_FONT);
 		subtitleArray[i].onclick = *SelectPreset;
 	}
-	for(size_t i = numSubtitles - numFonts; i < numSubtitles; ++i){
-		const size_t fontId = i - (numSubtitles - numFonts);
-		subtitleArray[i] = initSubtitleInstance(initSubtitleSettings(), fontId);
-		const Vector2 padding = {200, 100};	//For whatever reason, I gotta add 10.
-		subtitleArray[i].settings.position = (Vector2){padding.x, padding.y + (fontId * subtitleArray[i].settings.SUBTITLE_FONT_SIZE)};
+	
+	const float spread = 1.5f;
+	
+	SubtitleInstance* outlineColorChoices = subtitleArray + numPresets;
+	for(size_t i = 0; i < customizableColorsSize; ++i){
+		outlineColorChoices[i] = initSubtitleInstance(initSubtitleSettings(), DEFAULT_FONT);
+		const Vector2 padding = {300, 50};	//For whatever reason, I gotta add 10.
+		outlineColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, padding.y + (i * spread * outlineColorChoices[i].settings.SUBTITLE_FONT_SIZE * outlineColorChoices[i].settings.textScale)};
+		//const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
+		//outlineColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, center.y + (i * outlineColorChoices[i].settings.SUBTITLE_FONT_SIZE * outlineColorChoices[i].settings.textScale)};
 		//printVector2("Sub position", bunchOfSettings[i].position);
-		subtitleArray[i].onclick = *SelectFont;
-		subtitleArray[i].settings.SUBTITLE_FONT_SIZE = fontSizes[fontId];
+		outlineColorChoices[i].onclick = *SelectOutlineColor;
+		outlineColorChoices[i].settings.outlineColor = customizableColors[i];
+		outlineColorChoices[i].settings.OUTLINE = true;
+	}
+	
+	SubtitleInstance* backgroundColorChoices = subtitleArray + customizableColorsSize;
+	for(size_t i = 0; i < customizableColorsSize; ++i){
+		backgroundColorChoices[i] = initSubtitleInstance(initSubtitleSettings(), DEFAULT_FONT);
+		const Vector2 padding = {200, 50};	//For whatever reason, I gotta add 10.
+		backgroundColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, padding.y + (i * spread * backgroundColorChoices[i].settings.SUBTITLE_FONT_SIZE * backgroundColorChoices[i].settings.textScale)};
+		//const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
+		//backgroundColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, center.y + (i * backgroundColorChoices[i].settings.SUBTITLE_FONT_SIZE * backgroundColorChoices[i].settings.textScale)};
+		//printVector2("Sub position", bunchOfSettings[i].position);
+		backgroundColorChoices[i].onclick = *SelectBackgroundColor;
+		backgroundColorChoices[i].settings.subtitleBoxColor = customizableColors[i];
+	}
+	
+	SubtitleInstance* textColorChoices = backgroundColorChoices + customizableColorsSize;
+	for(size_t i = 0; i < customizableColorsSize; ++i){
+		textColorChoices[i] = initSubtitleInstance(initSubtitleSettings(), DEFAULT_FONT);
+		const Vector2 padding = {100, 50};	//For whatever reason, I gotta add 10.
+		textColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, padding.y + (i * spread * textColorChoices[i].settings.SUBTITLE_FONT_SIZE * textColorChoices[i].settings.textScale)};
+		//printVector2("Sub position", bunchOfSettings[i].position);
+		textColorChoices[i].onclick = *SelectTextColor;
+		textColorChoices[i].settings.textColor = customizableColors[i];
+	}
+	
+	//-----------	Font choices
+	int extraCodePoints[] = {0x2018, 0x2019, 0x201A, 0x201B, 0x201C, 0x201D, 0x201E, 0x201F, 0x2047, 0x2048, 0x2049};
+	size_t extraCodePointsSize = (sizeof(extraCodePoints) / sizeof(int));
+	int* codepoints = (int *)RL_MALLOC((95*sizeof(int)) + extraCodePointsSize);
+	for (int i = 0; i < 95; i++) codepoints[i] = i + 32;
+	for (int i = 0; i < extraCodePointsSize; i++) codepoints[i] = extraCodePoints[i];
+	
+	const char* fonts[] = {"resources/fonts/RoadgeekMittelschrift.ttf", "resources/fonts/amigaForeverPro.ttf"};
+	const int fontSizes[] = {100, 50};
+	numFonts = FONT_ENUM_SIZE;	//Edit subtitle_settings.h enum to add a font.
+	fontArray = (Font*)RL_CALLOC(numFonts, sizeof(Font));
+	assert(fontArray != NULL);
+	for(size_t i = 0; i < numFonts; ++i){
+		fontArray[i] = LoadFontEx(fonts[i], fontSizes[i], codepoints, 95 + extraCodePointsSize);
+		assert(IsFontReady(fontArray[i]));
+	}
+	
+	RL_FREE(codepoints);
+	
+	SubtitleInstance* fontChoices = textColorChoices + customizableColorsSize;
+	for(size_t i = 0; i < numFonts; ++i){
+		fontChoices[i] = initSubtitleInstance(initSubtitleSettings(), i);
+		const Vector2 padding = {200, 200};	//For whatever reason, I gotta add 10.
+		fontChoices[i].settings.position = (Vector2){padding.x, padding.y + (i * spread * fontChoices[i].settings.SUBTITLE_FONT_SIZE * fontChoices[i].settings.textScale)};
+		//printVector2("Sub position", bunchOfSettings[i].position);
+		fontChoices[i].onclick = *SelectFont;
+		fontChoices[i].settings.SUBTITLE_FONT_SIZE = fontSizes[i];
 	}
 
 	outlineShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/outline.fs", GLSL_VERSION));
@@ -293,7 +394,7 @@ void DrawSubtitleInstance(SubtitleInstance instance){
 	const float scale = 0.5f;
 	const Vector2 destinationSize = subtitleInstanceDestinationSize(instance);
 	const Rectangle subtitleDestination = subtitleInstanceDestination(instance);
-	printRectangle("Subtitle destination: ", subtitleDestination);
+	//printRectangle("Subtitle destination: ", subtitleDestination);
 	
 	if(instance.settings.OUTLINE){
 		//We put this in the draw loop so the amount of border can change while running.
@@ -301,8 +402,9 @@ void DrawSubtitleInstance(SubtitleInstance instance){
 		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "textureSize"), tScale, SHADER_UNIFORM_VEC2);
 		const float outlineSize = instance.settings.OUTLINE_DISTANCE;	//GLSL max int is 255
 		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "outlineSize"), &outlineSize, SHADER_UNIFORM_FLOAT);
-		const float outlineColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};	//Hoping that 1 is 100% opacity
+		float* outlineColor = RaylibColorToShaderColor(instance.settings.outlineColor);	//Hoping that 1 is 100% opacity
 		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "outlineColor"), outlineColor, SHADER_UNIFORM_VEC4);
+		RL_FREE(outlineColor);	//I hope we don't need this still
 		
 		BeginShaderMode(outlineShader);
 	}

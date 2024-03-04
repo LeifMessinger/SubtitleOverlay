@@ -7,6 +7,11 @@
 #include <stdio.h>	//puts
 #include <stdlib.h>	//malloc
 
+void SelectFont(SubtitleInstance bruh);
+void SelectTextColor(SubtitleInstance bruh);
+void SelectBackgroundColor(SubtitleInstance bruh);
+void SelectOutlineColor(SubtitleInstance bruh);
+
 void LoadSubtitles(SubtitleSettings settings);
 void UpdateSubtitles();
 void DrawSubtitles();
