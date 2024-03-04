@@ -381,6 +381,10 @@ void DrawSubtitles(){
 	}
 }
 
+bool vector2Equals(const Vector2 a, const Vector2 b){
+	return a.x == b.x && a.y == b.y;
+}
+
 void UpdateSubtitleInstance(SubtitleInstance* instance){
 	ifnt(instance->hasToUpdate || instance->settings.RAINBOW) return;
 	instance->hasToUpdate = false;
@@ -396,9 +400,12 @@ void UpdateSubtitleInstance(SubtitleInstance* instance){
 	const Vector2 subtitlePosition = {subtitleBoundingBoxExtra.x / 2, subtitleBoundingBoxExtra.y / 2};
 	//printVector2("Subtitle position", subtitlePosition);
 	
-	UnloadRenderTexture(instance->target);
-	instance->targetDimensions = (Vector2){subtitleBoundingBox.x + subtitleBoundingBoxExtra.x, subtitleBoundingBox.y + subtitleBoundingBoxExtra.y};
-	instance->target = LoadRenderTexture(instance->targetDimensions.x, instance->targetDimensions.y);
+	Vector2 newTargetDimensions = (Vector2){subtitleBoundingBox.x + subtitleBoundingBoxExtra.x, subtitleBoundingBox.y + subtitleBoundingBoxExtra.y};
+	ifnt(vector2Equals(instance->targetDimensions, newTargetDimensions)){
+		UnloadRenderTexture(instance->target);
+		instance->targetDimensions = newTargetDimensions;
+		instance->target = LoadRenderTexture(instance->targetDimensions.x, instance->targetDimensions.y);
+	}
 	//Drawing to the texture
 	BeginTextureMode(instance->target);
 	if(instance->settings.BACKGROUND){

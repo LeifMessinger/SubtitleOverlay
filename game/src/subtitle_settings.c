@@ -51,7 +51,7 @@ void setSubtitleSettings(const SubtitleSettings otherSettings){
 }
 
 //WINDOW
-#define FRAME_RATE 100
+#define FRAME_RATE 200
 #define GET_INTO_IT false
 #define BORDERLESS_WINDOW_MODE false
 
