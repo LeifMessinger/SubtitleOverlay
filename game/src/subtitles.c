@@ -303,7 +303,7 @@ void LoadMenu(SubtitleSettings settings){
 		outlineColorChoices[i].settings.OUTLINE = true;
 	}
 	
-	SubtitleInstance* backgroundColorChoices = subtitleArray + customizableColorsSize;
+	SubtitleInstance* backgroundColorChoices = outlineColorChoices + customizableColorsSize;
 	for(size_t i = 0; i < customizableColorsSize; ++i){
 		backgroundColorChoices[i] = initSubtitleInstance(settings, DEFAULT_FONT);
 		const Vector2 padding = {200, 50};	//For whatever reason, I gotta add 10.
