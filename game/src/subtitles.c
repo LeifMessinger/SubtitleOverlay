@@ -97,7 +97,7 @@ void SelectOutlineColor(SubtitleInstance bruh){
 	}
 }
 
-void LoadSubtitles(SubtitleSettings settings){
+void LoadMenu(SubtitleSettings settings){
 	SubtitleSettings bunchOfSettings[] = {
 		(SubtitleSettings){	//Default
 			settings.SUBTITLE_FONT_SIZE,	//Font size

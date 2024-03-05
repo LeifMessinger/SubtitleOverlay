@@ -12,7 +12,7 @@ void SelectTextColor(SubtitleInstance bruh);
 void SelectBackgroundColor(SubtitleInstance bruh);
 void SelectOutlineColor(SubtitleInstance bruh);
 
-void LoadSubtitles(SubtitleSettings settings);
+void LoadMenu(SubtitleSettings settings);
 void UpdateSubtitles();
 void DrawSubtitles();
 void UpdateSubtitleInstance(SubtitleInstance* settings);

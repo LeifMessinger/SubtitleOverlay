@@ -91,6 +91,6 @@ void main(){
 	//If we are inside the opaque object
 	if(isOpaque(texelColor)){
 		//keep the same color and return.
-		finalColor += texelColor;
+		finalColor = texelColor;
 	}
 }
