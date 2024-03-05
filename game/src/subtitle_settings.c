@@ -12,19 +12,21 @@ const SubtitleSettings defaults = {
 	{0, 0},	//Text position
 	
 	WHITE, //Subtitle color
+	false,	//Rainbow
 	
 	true,	//Background
 	{30, 40}, //Extra border
 	{0, 0, 0, 200}, //Border color
+	false,	//Rainbow
 	
 	false,	//Outline
 	BLANK,	//Outline
+	false,	//Rainbow
 	2,		//Outline thiccness (pixels)
 	
 	false,	//Around shadow
 	20,		//Around shadow distance
 	
-	false	//Rainbow
 };
 
 //Remember to RL_FREE it
@@ -109,6 +111,9 @@ Rectangle rectangleFromSizeCenteredAroundPosition(const Vector2 size, const Vect
 }
 Rectangle subtitleInstanceDestination(const SubtitleInstance instance){
 	return rectangleFromSizeCenteredAroundPosition(subtitleInstanceDestinationSize(instance), instance.settings.position);
+}
+bool subtitleInstanceIsRainbow(const SubtitleInstance instance){
+	return instance.settings.textRainbow || (instance.settings.BACKGROUND && instance.settings.subtitleBoxRainbow) || (instance.settings.OUTLINE && instance.settings.outlineRainbow);
 }
 void printVector2(const char* message, Vector2 bruh){
 	printf(message);

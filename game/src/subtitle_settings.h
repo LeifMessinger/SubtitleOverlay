@@ -12,20 +12,21 @@ typedef struct {
 	Vector2 position;
 	
 	Color textColor;
+	bool textRainbow;
 
 	bool BACKGROUND;
 	Vector2 subtitleBoundingBoxExtra;
 	Color subtitleBoxColor;
+	bool subtitleBoxRainbow;
 
 	bool OUTLINE;
 	Color outlineColor;
+	bool outlineRainbow;
 	float OUTLINE_DISTANCE;
 
 	bool AROUND_SHADOW;
 	float AROUND_SHADOW_DISTANCE;
-
-
-	bool RAINBOW;
+	
 } SubtitleSettings;
 
 typedef struct SubtitleInstance_info{
@@ -62,6 +63,7 @@ void printRectangle(const char* message, Rectangle bruh);
 
 Vector2 subtitleInstanceDestinationSize(const SubtitleInstance instance);
 Rectangle subtitleInstanceDestination(const SubtitleInstance instance);
+bool subtitleInstanceIsRainbow(const SubtitleInstance instance);
 
 const SubtitleSettings initSubtitleSettings();
 const SubtitleSettings getSubtitleSettings();	//We're gonna hope that the C compiler removes the unnecessary copying

@@ -72,6 +72,7 @@ void SelectTextColor(SubtitleInstance bruh){
 	for(size_t i = 0; i < numSubtitles; ++i){
 		if(subtitleArray[i].onclick != (*SelectTextColor)){
 			subtitleArray[i].settings.textColor = bruh.settings.textColor;
+			subtitleArray[i].settings.textRainbow = bruh.settings.textRainbow;
 			subtitleArray[i].hasToUpdate = true;
 		}
 	}
@@ -82,6 +83,7 @@ void SelectBackgroundColor(SubtitleInstance bruh){
 			subtitleArray[i].settings.subtitleBoxColor.r = bruh.settings.subtitleBoxColor.r;
 			subtitleArray[i].settings.subtitleBoxColor.g = bruh.settings.subtitleBoxColor.g;
 			subtitleArray[i].settings.subtitleBoxColor.b = bruh.settings.subtitleBoxColor.b;
+			subtitleArray[i].settings.subtitleBoxRainbow = bruh.settings.subtitleBoxRainbow;
 			subtitleArray[i].hasToUpdate = true;
 		}
 	}
@@ -92,6 +94,7 @@ void SelectOutlineColor(SubtitleInstance bruh){
 			subtitleArray[i].settings.outlineColor.r = bruh.settings.outlineColor.r;
 			subtitleArray[i].settings.outlineColor.g = bruh.settings.outlineColor.g;
 			subtitleArray[i].settings.outlineColor.b = bruh.settings.outlineColor.b;
+			subtitleArray[i].settings.outlineRainbow = bruh.settings.outlineRainbow;
 			subtitleArray[i].hasToUpdate = true;
 		}
 	}
@@ -105,95 +108,104 @@ void LoadMenu(SubtitleSettings settings){
 			settings.position,	//Text position
 			
 			settings.textColor,
+			settings.textRainbow,
 			
 			settings.BACKGROUND,	//Background
 			settings.subtitleBoundingBoxExtra,
 			settings.subtitleBoxColor,
+			settings.subtitleBoxRainbow,
 	
 			settings.OUTLINE,	//Outline
 			settings.outlineColor,	//Outline
+			settings.outlineRainbow,
 			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			settings.AROUND_SHADOW,	//Around shadow
 			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
-			settings.RAINBOW	//Rainbow
 		}, (SubtitleSettings){	//Nothing
 			settings.SUBTITLE_FONT_SIZE,	//Font size
 			settings.textScale,	//Font size
 			settings.position,	//Text position
 			
 			settings.textColor,
+			settings.textRainbow,
 			
 			false,	//Background
 			settings.subtitleBoundingBoxExtra,
 			settings.subtitleBoxColor,
+			settings.subtitleBoxRainbow,
 	
 			false,	//Outline
 			settings.outlineColor,	//Outline
+			settings.outlineRainbow,
 			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
 			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
-			
-			false	//Rainbow
 		}, (SubtitleSettings){	//Background only
 			settings.SUBTITLE_FONT_SIZE,	//Font size
 			settings.textScale,	//Font size
 			settings.position,	//Text position
 			
 			settings.textColor,
+			settings.textRainbow,
 			
 			true,	//Background
 			settings.subtitleBoundingBoxExtra,
 			settings.subtitleBoxColor,
+			settings.subtitleBoxRainbow,
 	
 			false,	//Outline
 			settings.outlineColor,	//Outline
+			settings.outlineRainbow,
 			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
 			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
-			false	//Rainbow
 		}, (SubtitleSettings){	//Outline only
 			settings.SUBTITLE_FONT_SIZE,	//Font size
 			settings.textScale,	//Font size
 			settings.position,	//Text position
 			
 			settings.textColor,
+			settings.textRainbow,
 			
 			false,	//Background
 			settings.subtitleBoundingBoxExtra,
 			settings.subtitleBoxColor,
+			settings.subtitleBoxRainbow,
 	
 			true,	//Outline
 			BLACK,	//Outline
+			settings.outlineRainbow,
 			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
 			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
-			false	//Rainbow
 		}, (SubtitleSettings){	//Background and outline
 			settings.SUBTITLE_FONT_SIZE,	//Font size
 			settings.textScale,	//Font size
 			settings.position,	//Text position
 			
 			settings.textColor,
+			settings.textRainbow,
 			
 			true,	//Background
 			settings.subtitleBoundingBoxExtra,
 			settings.subtitleBoxColor,
+			settings.subtitleBoxRainbow,
 	
 			true,	//Outline
 			BLACK,	//Outline
+			settings.outlineRainbow,
 			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
 			false,	//Around shadow
 			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
-			settings.RAINBOW	//Rainbow
 		}, /*(SubtitleSettings){	//Around shadow
 			settings.SUBTITLE_FONT_SIZE,	//Font size
 			settings.position,	//Text position
@@ -202,6 +214,7 @@ void LoadMenu(SubtitleSettings settings){
 			settings.FRAME_RATE,	//Frame rate
 			
 			settings.textColor,
+			settings.textRainbow,
 			
 			settings.BACKGROUND,	//Background
 			settings.subtitleBoundingBoxExtra,
@@ -216,26 +229,6 @@ void LoadMenu(SubtitleSettings settings){
 			
 			settings.RAINBOW	//Rainbow
 		},*/
-		(SubtitleSettings){	//Rainbow
-			settings.SUBTITLE_FONT_SIZE,	//Font size
-			settings.textScale,	//Font size
-			settings.position,	//Text position
-			
-			settings.textColor,
-			
-			settings.BACKGROUND,	//Background
-			settings.subtitleBoundingBoxExtra,
-			settings.subtitleBoxColor,
-	
-			settings.OUTLINE,	//Outline
-			settings.outlineColor,	//Outline
-			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
-			
-			settings.AROUND_SHADOW,	//Around shadow
-			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
-			
-			true	//Rainbow
-		}
 	};
 	//Spread them out
 	//numSubtitles = 1;
@@ -275,7 +268,7 @@ void LoadMenu(SubtitleSettings settings){
 		MAGENTA
 	};
 	size_t customizableColorsSize = (sizeof(customizableColors) / sizeof(Color));
-	numSubtitles += customizableColorsSize * 3U;	//*3U because outline, text color and background color
+	numSubtitles += (customizableColorsSize * 3U) + 3;	//*3U because outline, text color and background color + 3 rainbow
 	
 	LoadFonts();
 	numSubtitles += numFonts;
@@ -291,7 +284,7 @@ void LoadMenu(SubtitleSettings settings){
 	const float spread = 1.5f;
 	
 	SubtitleInstance* outlineColorChoices = subtitleArray + numPresets;
-	for(size_t i = 0; i < customizableColorsSize; ++i){
+	for(size_t i = 0; i < customizableColorsSize + 1; ++i){
 		outlineColorChoices[i] = initSubtitleInstance(settings, DEFAULT_FONT);
 		const Vector2 padding = {300, 50};	//For whatever reason, I gotta add 10.
 		outlineColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, padding.y + (i * spread * outlineColorChoices[i].settings.SUBTITLE_FONT_SIZE * outlineColorChoices[i].settings.textScale)};
@@ -299,12 +292,16 @@ void LoadMenu(SubtitleSettings settings){
 		//outlineColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, center.y + (i * outlineColorChoices[i].settings.SUBTITLE_FONT_SIZE * outlineColorChoices[i].settings.textScale)};
 		//printVector2("Sub position", bunchOfSettings[i].position);
 		outlineColorChoices[i].onclick = *SelectOutlineColor;
-		outlineColorChoices[i].settings.outlineColor = customizableColors[i];
+		if(i < customizableColorsSize){
+			outlineColorChoices[i].settings.outlineColor = customizableColors[i];
+		}else{
+			outlineColorChoices[i].settings.outlineRainbow = true;
+		}
 		outlineColorChoices[i].settings.OUTLINE = true;
 	}
 	
-	SubtitleInstance* backgroundColorChoices = outlineColorChoices + customizableColorsSize;
-	for(size_t i = 0; i < customizableColorsSize; ++i){
+	SubtitleInstance* backgroundColorChoices = outlineColorChoices + customizableColorsSize + 1;	//+1 for rainbow
+	for(size_t i = 0; i < customizableColorsSize + 1; ++i){
 		backgroundColorChoices[i] = initSubtitleInstance(settings, DEFAULT_FONT);
 		const Vector2 padding = {200, 50};	//For whatever reason, I gotta add 10.
 		backgroundColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, padding.y + (i * spread * backgroundColorChoices[i].settings.SUBTITLE_FONT_SIZE * backgroundColorChoices[i].settings.textScale)};
@@ -312,21 +309,29 @@ void LoadMenu(SubtitleSettings settings){
 		//backgroundColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, center.y + (i * backgroundColorChoices[i].settings.SUBTITLE_FONT_SIZE * backgroundColorChoices[i].settings.textScale)};
 		//printVector2("Sub position", bunchOfSettings[i].position);
 		backgroundColorChoices[i].onclick = *SelectBackgroundColor;
-		backgroundColorChoices[i].settings.subtitleBoxColor = customizableColors[i];
+		if(i < customizableColorsSize){
+			backgroundColorChoices[i].settings.subtitleBoxColor = customizableColors[i];
+		}else{
+			backgroundColorChoices[i].settings.subtitleBoxRainbow = true;
+		}
 	}
 	
-	SubtitleInstance* textColorChoices = backgroundColorChoices + customizableColorsSize;
-	for(size_t i = 0; i < customizableColorsSize; ++i){
+	SubtitleInstance* textColorChoices = backgroundColorChoices + customizableColorsSize + 1;
+	for(size_t i = 0; i < customizableColorsSize + 1; ++i){
 		textColorChoices[i] = initSubtitleInstance(settings, DEFAULT_FONT);
 		const Vector2 padding = {100, 50};	//For whatever reason, I gotta add 10.
 		textColorChoices[i].settings.position = (Vector2){GetScreenWidth() - padding.x, padding.y + (i * spread * textColorChoices[i].settings.SUBTITLE_FONT_SIZE * textColorChoices[i].settings.textScale)};
 		//printVector2("Sub position", bunchOfSettings[i].position);
 		textColorChoices[i].onclick = *SelectTextColor;
-		textColorChoices[i].settings.textColor = customizableColors[i];
+		if(i < customizableColorsSize){
+			textColorChoices[i].settings.textColor = customizableColors[i];
+		}else{
+			textColorChoices[i].settings.textRainbow = true;
+		}
 	}
 	
 	//-----------	Font choices
-	SubtitleInstance* fontChoices = textColorChoices + customizableColorsSize;
+	SubtitleInstance* fontChoices = textColorChoices + customizableColorsSize + 1;
 	for(size_t i = 0; i < numFonts; ++i){
 		fontChoices[i] = initSubtitleInstance(settings, i);
 		const Vector2 padding = {200, 200};	//For whatever reason, I gotta add 10.
@@ -386,7 +391,7 @@ bool vector2Equals(const Vector2 a, const Vector2 b){
 }
 
 void UpdateSubtitleInstance(SubtitleInstance* instance){
-	ifnt(instance->hasToUpdate || instance->settings.RAINBOW) return;
+	ifnt(instance->hasToUpdate || subtitleInstanceIsRainbow(*instance)) return;
 	instance->hasToUpdate = false;
 	
 	Font* font = fontArray + instance->font;
@@ -394,7 +399,7 @@ void UpdateSubtitleInstance(SubtitleInstance* instance){
 	//printVector2("Subtitle bounding box", subtitleBoundingBox);
 	const Vector2 subtitleBoundingBoxExtra = instance->settings.subtitleBoundingBoxExtra;
 	//printVector2("Subtitle bounding box extra", subtitleBoundingBoxExtra);
-	const Color subtitleTextColor = (instance->settings.RAINBOW)? ColorFromHSV(GetTime() * 500.0, 1, 1) : instance->settings.textColor;
+	const Color subtitleTextColor = (instance->settings.textRainbow)? ColorFromHSV(GetTime() * 500.0, 1, 1) : instance->settings.textColor;
 	
 	//const Vector2 subtitlePosition = {(subtitleBoundingBoxExtra.x / 2), (subtitleBoundingBoxExtra.y / 2) + subtitleBoundingBox.y};	//Position of the subtitles inside the texture buffer
 	const Vector2 subtitlePosition = {subtitleBoundingBoxExtra.x / 2, subtitleBoundingBoxExtra.y / 2};
@@ -409,7 +414,7 @@ void UpdateSubtitleInstance(SubtitleInstance* instance){
 	//Drawing to the texture
 	BeginTextureMode(instance->target);
 	if(instance->settings.BACKGROUND){
-		ClearBackground(instance->settings.subtitleBoxColor);
+		ClearBackground((instance->settings.subtitleBoxRainbow)? ColorFromHSV(GetTime() * 500.0, 1, 1) : instance->settings.subtitleBoxColor);
 	}else{
 		ClearBackground(BLANK);	//Still need to clear it to get rid of anything
 	}
@@ -429,7 +434,7 @@ void DrawSubtitleInstance(SubtitleInstance instance){
 		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "textureSize"), tScale, SHADER_UNIFORM_VEC2);
 		const float outlineSize = instance.settings.OUTLINE_DISTANCE;	//GLSL max int is 255
 		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "outlineSize"), &outlineSize, SHADER_UNIFORM_FLOAT);
-		float* outlineColor = RaylibColorToShaderColor(instance.settings.outlineColor);	//Hoping that 1 is 100% opacity
+		float* outlineColor = RaylibColorToShaderColor((instance.settings.outlineRainbow)? ColorFromHSV(GetTime() * 500.0, 1, 1) : instance.settings.outlineColor);	//Hoping that 1 is 100% opacity
 		SetShaderValue(outlineShader, GetShaderLocation(outlineShader, "outlineColor"), outlineColor, SHADER_UNIFORM_VEC4);
 		RL_FREE(outlineColor);	//I hope we don't need this still
 		
