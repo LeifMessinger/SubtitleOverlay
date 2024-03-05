@@ -102,7 +102,7 @@ void SelectOutlineColor(SubtitleInstance bruh){
 
 void LoadMenu(SubtitleSettings settings){
 	SubtitleSettings bunchOfSettings[] = {
-		(SubtitleSettings){	//Default
+		(SubtitleSettings){	//Default (translucent background with white text)
 			settings.SUBTITLE_FONT_SIZE,	//Font size
 			settings.textScale,	//Font size
 			settings.position,	//Text position
@@ -143,7 +143,7 @@ void LoadMenu(SubtitleSettings settings){
 			
 			false,	//Around shadow
 			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
-		}, (SubtitleSettings){	//Background only
+		}, (SubtitleSettings){	//Background full opaque
 			settings.SUBTITLE_FONT_SIZE,	//Font size
 			settings.textScale,	//Font size
 			settings.position,	//Text position
@@ -153,7 +153,7 @@ void LoadMenu(SubtitleSettings settings){
 			
 			true,	//Background
 			settings.subtitleBoundingBoxExtra,
-			settings.subtitleBoxColor,
+			BLACK,
 			settings.subtitleBoxRainbow,
 	
 			false,	//Outline
@@ -276,9 +276,19 @@ void LoadMenu(SubtitleSettings settings){
 	subtitleArray = (SubtitleInstance*)calloc(numSubtitles, sizeof(SubtitleInstance));
 	assert(subtitleArray != NULL);
 	//-----------	Presets
+	const char* presetTitles[] = {
+		"Translucent Background",
+		"No Background",
+		"Solid Background",
+		"Outline Only",
+		"Background and Outline",
+		"Around Shadow"
+	};
+	assert((sizeof(customizableColors) / sizeof(Color)) >= numPresets);
 	for(size_t i = 0; i < numPresets; ++i){
 		subtitleArray[i] = initSubtitleInstance(bunchOfSettings[i], DEFAULT_FONT);
 		subtitleArray[i].onclick = *SelectPreset;
+		subtitleArray[i].text = presetTitles[i];
 	}
 	
 	const float spread = 1.5f;
@@ -414,7 +424,9 @@ void UpdateSubtitleInstance(SubtitleInstance* instance){
 	//Drawing to the texture
 	BeginTextureMode(instance->target);
 	if(instance->settings.BACKGROUND){
-		ClearBackground((instance->settings.subtitleBoxRainbow)? ColorFromHSV(GetTime() * 500.0, 1, 1) : instance->settings.subtitleBoxColor);
+		Color backgroundColor = (instance->settings.subtitleBoxRainbow)? ColorFromHSV(GetTime() * 500.0, 1, 1) : instance->settings.subtitleBoxColor;
+		if(instance->settings.subtitleBoxRainbow) backgroundColor.a = instance->settings.subtitleBoxColor.a;
+		ClearBackground(backgroundColor);
 	}else{
 		ClearBackground(BLANK);	//Still need to clear it to get rid of anything
 	}
