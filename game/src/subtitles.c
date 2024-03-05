@@ -349,6 +349,8 @@ void LoadMenu(SubtitleSettings settings){
 		//printVector2("Sub position", bunchOfSettings[i].position);
 		fontChoices[i].onclick = *SelectFont;
 		fontChoices[i].settings.SUBTITLE_FONT_SIZE = fontSizes[i];
+		fontChoices[i].settings.OUTLINE = true;
+		fontChoices[i].settings.outlineColor = BLACK;
 	}
 
 	outlineShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/outline.fs", GLSL_VERSION));
