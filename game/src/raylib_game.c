@@ -35,9 +35,13 @@ void LoadGameShit(){
 	SubtitleSettings settings = getSubtitleSettings();
 	LoadOverlayWindow(false);
 	LoadMenu(settings);
+	LoadShaders();
 }
 
 void UpdateDrawFrame(){	//GetFrameTime gives you frame time
+	if(IsKeyPressed(KEY_R)){
+		ReloadShaders();
+	}
 	UpdateSubtitles();	//Subtitle logic
 	
 	BeginDrawing();
@@ -57,6 +61,7 @@ void UpdateDrawFrame(){	//GetFrameTime gives you frame time
 void UnloadGameShit(){
 	UnloadSubtitles();
 	CloseWindow();
+	UnloadShaders();
 }
 
 //----------------------------------------------------------------------------------

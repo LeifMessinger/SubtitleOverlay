@@ -17,6 +17,9 @@ void UpdateSubtitles();
 void DrawSubtitles();
 void UpdateSubtitleInstance(SubtitleInstance* settings);
 void DrawSubtitleInstance(SubtitleInstance settings);
+void LoadShaders();
+void UnloadShaders();
 void UnloadSubtitles();
+void ReloadShaders();
 
 #endif

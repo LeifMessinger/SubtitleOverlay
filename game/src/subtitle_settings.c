@@ -25,7 +25,7 @@ const SubtitleSettings defaults = {
 	2,		//Outline thiccness (pixels)
 	
 	false,	//Around shadow
-	20,		//Around shadow distance
+	5.0,		//Around shadow distance
 	
 };
 

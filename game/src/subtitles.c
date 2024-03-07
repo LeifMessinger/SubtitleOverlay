@@ -206,29 +206,27 @@ void LoadMenu(SubtitleSettings settings){
 			false,	//Around shadow
 			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
 			
-		}, /*(SubtitleSettings){	//Around shadow
+		}, (SubtitleSettings){	//Around shadow
 			settings.SUBTITLE_FONT_SIZE,	//Font size
+			settings.textScale,	//Font size
 			settings.position,	//Text position
-			settings.OVERLAY_MODE,	//Overlay
-			settings.BORDERLESS_WINDOW_MODE,	//Borderless window (buggy)
-			settings.FRAME_RATE,	//Frame rate
 			
 			settings.textColor,
 			settings.textRainbow,
 			
-			settings.BACKGROUND,	//Background
+			false,	//Background
 			settings.subtitleBoundingBoxExtra,
 			settings.subtitleBoxColor,
+			settings.subtitleBoxRainbow,
 	
-			settings.OUTLINE,	//Outline
+			false,	//Outline
 			settings.outlineColor,	//Outline
+			settings.outlineRainbow,
 			settings.OUTLINE_DISTANCE,		//Outline thiccness (pixels)
 			
-			settings.AROUND_SHADOW,	//Around shadow
+			true,	//Around shadow
 			settings.AROUND_SHADOW_DISTANCE,		//Around shadow distance
-			
-			settings.RAINBOW	//Rainbow
-		},*/
+		}
 	};
 	//Spread them out
 	//numSubtitles = 1;
@@ -353,9 +351,6 @@ void LoadMenu(SubtitleSettings settings){
 		fontChoices[i].settings.outlineColor = BLACK;
 	}
 
-	outlineShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/outline.fs", GLSL_VERSION));
-	aroundShadowShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/aroundShadow.fs", GLSL_VERSION));
-
 	//printf("Screen: (%d, %d)\t Monitor: (%d, %d)\n", GetScreenWidth(), GetScreenHeight(), GetMonitorWidth(0), GetMonitorHeight(0));
 }
 
@@ -459,7 +454,9 @@ void DrawSubtitleInstance(SubtitleInstance instance){
 		const float tScale[2] = { (float)destinationSize.x, (float)destinationSize.y };
 		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "textureSize"), tScale, SHADER_UNIFORM_VEC2);
 		const float outlineSize = instance.settings.AROUND_SHADOW_DISTANCE;	//GLSL max int is 255
-		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "outlineSize"), &outlineSize, SHADER_UNIFORM_FLOAT);
+		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "maxDistance"), &outlineSize, SHADER_UNIFORM_FLOAT);
+		const float spread = 1.0f;
+		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "spread"), &spread, SHADER_UNIFORM_FLOAT);
 		const float outlineColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};	//Hoping that 1 is 100% opacity
 		SetShaderValue(aroundShadowShader, GetShaderLocation(aroundShadowShader, "outlineColor"), outlineColor, SHADER_UNIFORM_VEC4);
 		
@@ -478,6 +475,21 @@ void DrawSubtitleInstance(SubtitleInstance instance){
 	}
 }
 
+void LoadShaders(){
+	outlineShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/outline.fs", GLSL_VERSION));
+	aroundShadowShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/aroundShadow.fs", GLSL_VERSION));
+}
+
+void UnloadShaders(){
+	UnloadShader(outlineShader);
+	UnloadShader(aroundShadowShader);
+}
+
+void ReloadShaders(){
+	UnloadShaders();
+	LoadShaders();
+}
+
 void UnloadSubtitles(){
 	for(size_t i = 0; i < numSubtitles; ++i){
 		UnloadSubtitleInstance(subtitleArray[i]);
@@ -490,6 +502,5 @@ void UnloadSubtitles(){
 	}
 	free(fontArray);
 
-	//UnloadShader(outlineShader);
-	//UnloadShader(aroundShadowShader);
+	UnloadShaders();
 }
