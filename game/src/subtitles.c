@@ -4,7 +4,16 @@
 #include <math.h>       // Required for: sinf(), cosf(), tan(), atan2f(), sqrtf(), floor(), fminf(), fmaxf(), fabsf()
 
 #define ifnt(x) if(!(x))
+	
+//#define COLOR_PRESETS
+#ifndef COLOR_PRESETS
+RenderTexture2D colorSpectrumTexture;
+Rectangle colorSpectrumDestinations[3];
+#endif
 
+#ifndef COLOR_PRESETS
+Shader colorSpectrumShader;
+#endif
 Shader outlineShader, aroundShadowShader;
 
 //shut up, it works
@@ -233,12 +242,13 @@ void LoadMenu(SubtitleSettings settings){
 	const size_t numPresets = (sizeof(bunchOfSettings) / sizeof(SubtitleSettings));
 	numSubtitles = numPresets;
 	for(size_t i = 0; i < numSubtitles; ++i){
-		const Vector2 center = {GetScreenWidth() / 2, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
+		const Vector2 center = {(GetScreenWidth() / 2) - 100, (GetScreenHeight() / 2) + 10};	//For whatever reason, I gotta add 10.
 		const float turns = (float)i / (float)numSubtitles;
 		const float radius = 300.0f;
 		bunchOfSettings[i].position = (Vector2){center.x + cosf(turns * 2 * PI) * radius, center.y + sinf(turns * 2 * PI) * radius};
 		//printVector2("Sub position", bunchOfSettings[i].position);
 	}
+	#ifdef COLOR_PRESETS
 	Color customizableColors[] = {LIGHTGRAY,
 		//GRAY,
 		//DARKGRAY,
@@ -267,6 +277,7 @@ void LoadMenu(SubtitleSettings settings){
 	};
 	size_t customizableColorsSize = (sizeof(customizableColors) / sizeof(Color));
 	numSubtitles += (customizableColorsSize * 3U) + 3;	//*3U because outline, text color and background color + 3 rainbow
+	#endif
 	
 	LoadFonts();
 	numSubtitles += numFonts;
@@ -282,7 +293,7 @@ void LoadMenu(SubtitleSettings settings){
 		"Background and Outline",
 		"Around Shadow"
 	};
-	assert((sizeof(customizableColors) / sizeof(Color)) >= numPresets);
+	assert((sizeof(presetTitles) / sizeof(const char*)) >= numPresets);
 	for(size_t i = 0; i < numPresets; ++i){
 		subtitleArray[i] = initSubtitleInstance(bunchOfSettings[i], DEFAULT_FONT);
 		subtitleArray[i].onclick = *SelectPreset;
@@ -291,7 +302,21 @@ void LoadMenu(SubtitleSettings settings){
 	
 	const float spread = 1.5f;
 	
-	SubtitleInstance* outlineColorChoices = subtitleArray + numPresets;
+	//-----------	Font choices
+	SubtitleInstance* fontChoices = subtitleArray + numPresets;
+	for(size_t i = 0; i < numFonts; ++i){
+		fontChoices[i] = initSubtitleInstance(settings, i);
+		const Vector2 padding = {200, 200};	//For whatever reason, I gotta add 10.
+		fontChoices[i].settings.position = (Vector2){padding.x, padding.y + (i * spread * fontChoices[i].settings.SUBTITLE_FONT_SIZE * fontChoices[i].settings.textScale)};
+		//printVector2("Sub position", bunchOfSettings[i].position);
+		fontChoices[i].onclick = *SelectFont;
+		fontChoices[i].settings.SUBTITLE_FONT_SIZE = fontSizes[i];
+		fontChoices[i].settings.OUTLINE = true;
+		fontChoices[i].settings.outlineColor = BLACK;
+	}
+	
+	#ifdef COLOR_PRESETS
+	SubtitleInstance* outlineColorChoices = fontChoices + numFonts;
 	for(size_t i = 0; i < customizableColorsSize + 1; ++i){
 		outlineColorChoices[i] = initSubtitleInstance(settings, DEFAULT_FONT);
 		const Vector2 padding = {300, 50};	//For whatever reason, I gotta add 10.
@@ -337,19 +362,35 @@ void LoadMenu(SubtitleSettings settings){
 			textColorChoices[i].settings.textRainbow = true;
 		}
 	}
-	
-	//-----------	Font choices
-	SubtitleInstance* fontChoices = textColorChoices + customizableColorsSize + 1;
-	for(size_t i = 0; i < numFonts; ++i){
-		fontChoices[i] = initSubtitleInstance(settings, i);
-		const Vector2 padding = {200, 200};	//For whatever reason, I gotta add 10.
-		fontChoices[i].settings.position = (Vector2){padding.x, padding.y + (i * spread * fontChoices[i].settings.SUBTITLE_FONT_SIZE * fontChoices[i].settings.textScale)};
-		//printVector2("Sub position", bunchOfSettings[i].position);
-		fontChoices[i].onclick = *SelectFont;
-		fontChoices[i].settings.SUBTITLE_FONT_SIZE = fontSizes[i];
-		fontChoices[i].settings.OUTLINE = true;
-		fontChoices[i].settings.outlineColor = BLACK;
+	#else
+	//if COLOR_PRESETS is not defined
+	for(size_t i = 0; i < 3; ++i){
+		colorSpectrumDestinations[i] = rectangleFromSizeCenteredAroundPosition((Vector2){255 * 2, 255}, (Vector2){(GetScreenWidth() - 255), ((GetScreenHeight() * (i + 1)) / 4)});
 	}
+	colorSpectrumTexture = LoadRenderTexture(colorSpectrumDestinations[0].width, colorSpectrumDestinations[0].height);
+	
+	//Init texture
+	RenderTexture2D whitePixel = LoadRenderTexture(1, 1);
+	BeginTextureMode(whitePixel);
+	ClearBackground(WHITE);	//Hopefully this just writes every pixel.
+	EndTextureMode();
+	
+	BeginTextureMode(colorSpectrumTexture);
+	BeginShaderMode(colorSpectrumShader);
+	
+	DrawTexturePro(whitePixel.texture,
+		(Rectangle){0.0, 0.0, 1.0, 1.0},
+		(Rectangle){0.0, 0.0, colorSpectrumDestinations[0].width, colorSpectrumDestinations[0].height},
+		(Vector2){0, 0},
+		0,
+		WHITE
+	);
+	
+	EndShaderMode();
+	EndTextureMode();
+	EndDrawing();
+	UnloadRenderTexture(whitePixel);
+	#endif
 
 	//printf("Screen: (%d, %d)\t Monitor: (%d, %d)\n", GetScreenWidth(), GetScreenHeight(), GetMonitorWidth(0), GetMonitorHeight(0));
 }
@@ -372,6 +413,40 @@ void UpdateSubtitles(){
 		}
 	}
 	
+	#ifndef COLOR_PRESETS
+	if(!isOverlayMode()){
+		for(int i = 0; i < 3; ++i){
+			if(pointIsInRectangle(GetMousePosition(), colorSpectrumDestinations[i])){
+				if(IsMouseButtonDown(MOUSE_LEFT_BUTTON)){	//Doesn't work if in OVERLAY mode
+					Vector2 uv = (Vector2){(GetMousePosition().x - colorSpectrumDestinations[i].x) / colorSpectrumDestinations[i].width, (GetMousePosition().y - colorSpectrumDestinations[i].y) / colorSpectrumDestinations[i].height};
+					uv.y = 1.0 - uv.y;
+					Vector3 hsv = (uv.y < .5)? (Vector3){uv.x,1.0, (uv.y * 2.0)} : (Vector3){uv.x, 2.0 - (uv.y * 2.0), 1.0};
+					Color fromSpectrum = ColorFromHSV(hsv.x * 360.0, hsv.y, hsv.z);
+					//Color fromSpectrum = (Color){uv.x * 255, uv.y * 255, 0, 255};	//Mango
+					SubtitleSettings settings = initSubtitleSettings();
+					SubtitleInstance bruh;
+					bruh.settings = settings;
+					switch(i){
+						case 0:
+							bruh.settings.textColor = fromSpectrum;
+							SelectTextColor(bruh);
+							break;
+						case 1:
+							bruh.settings.subtitleBoxColor = fromSpectrum;
+							SelectBackgroundColor(bruh);
+							break;
+						case 2:
+							bruh.settings.outlineColor = fromSpectrum;
+							SelectOutlineColor(bruh);
+							break;
+					}
+				}
+				hoveringOver = true;
+			}
+		}
+	}
+	#endif
+	
 	LoadLiveSubtitles();
 	const bool updateSubtitleText = thereIsLiveSubtitles();
 	#pragma omp parallel for
@@ -391,6 +466,24 @@ void DrawSubtitles(){
 	for(size_t i = 0; i < numSubtitles; ++i){	//Only the first one
 		DrawSubtitleInstance(subtitleArray[i]);
 	}
+	
+	#ifndef COLOR_PRESETS
+	//BeginShaderMode(colorSpectrumShader);
+	if(!isOverlayMode()){
+		for(int i = 0; i < 3; ++i){
+			//DrawRectangleRec(colorSpectrumDestinations[i], WHITE);
+			DrawTexturePro(
+				colorSpectrumTexture.texture,
+				(Rectangle){0, 0, colorSpectrumDestinations[i].width, colorSpectrumDestinations[i].height},
+				colorSpectrumDestinations[i],
+				(Vector2){0, 0},
+				0, //Rotation
+				WHITE	//Color
+			);
+		}
+	}
+	//EndShaderMode();
+	#endif
 }
 
 bool vector2Equals(const Vector2 a, const Vector2 b){
@@ -476,11 +569,17 @@ void DrawSubtitleInstance(SubtitleInstance instance){
 }
 
 void LoadShaders(){
+	#ifndef COLOR_PRESETS
+	colorSpectrumShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/colorSpectrum.fs", GLSL_VERSION));
+	#endif
 	outlineShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/outline.fs", GLSL_VERSION));
 	aroundShadowShader = LoadShader(0, TextFormat("resources/shaders/glsl%i/aroundShadow.fs", GLSL_VERSION));
 }
 
 void UnloadShaders(){
+	#ifndef COLOR_PRESETS
+	UnloadShader(colorSpectrumShader);
+	#endif
 	UnloadShader(outlineShader);
 	UnloadShader(aroundShadowShader);
 }

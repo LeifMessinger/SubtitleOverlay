@@ -34,8 +34,8 @@ static void UpdateDrawFrame(void);          // Update and draw one frame
 void LoadGameShit(){
 	SubtitleSettings settings = getSubtitleSettings();
 	LoadOverlayWindow(false);
-	LoadMenu(settings);
 	LoadShaders();
+	LoadMenu(settings);
 }
 
 void UpdateDrawFrame(){	//GetFrameTime gives you frame time
