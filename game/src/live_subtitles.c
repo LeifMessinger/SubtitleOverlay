@@ -49,8 +49,8 @@ const char* LoadLiveSubtitles(){
 	UnloadLiveSubtitles();
 	liveSubtitles = (char*)calloc(LIVE_SUBTITLES_BUFFER_SIZE, sizeof(char));
 	if(subtitleTextFile == NULL){
-		liveSubtitles[0] = '\0';
-		waitUntil = 0;
+		strncpy(liveSubtitles, "Waiting for game subtitles...", LIVE_SUBTITLES_BUFFER_SIZE);
+		waitUntil = 171381647800000;	//some big number
 		return getLiveSubtitles();
 	}
 	
@@ -70,7 +70,8 @@ bool isThereLiveSubtitles(){
 	return !isPastTime(getLiveSubtitlesWaitTime());
 }
 bool thereIsLiveSubtitlesValue = false;
-bool thereIsLiveSubtitles(){
+bool thereIsLiveSubtitles(){	//Always returns false
+	return true;
 	const bool result = thereIsLiveSubtitlesValue;
 	thereIsLiveSubtitlesValue = false;
 	return result;

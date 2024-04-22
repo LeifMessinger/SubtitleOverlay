@@ -1,5 +1,6 @@
 #include "subtitles.h"	//Includes subtitle_settings.h too
 #include "live_subtitles.h"
+#include "listFiles.h"
 #include <assert.h>
 #include <math.h>       // Required for: sinf(), cosf(), tan(), atan2f(), sqrtf(), floor(), fminf(), fmaxf(), fabsf()
 
@@ -19,6 +20,7 @@ Shader outlineShader, aroundShadowShader;
 //shut up, it works
 Font* fontArray = NULL;
 int numFonts = 0;
+#define numFontSizes 7
 
 SubtitleInstance* subtitleArray = NULL;
 int numSubtitles = 0;
@@ -29,24 +31,25 @@ int numSubtitles = 0;
     #define GLSL_VERSION            100
 #endif
 
-const int fontSizes[] = {100, 50};
+const float LOADED_FONT_SIZE = 90.0f;	//Some fonts might be giant, but you can make it smaller
 void LoadFonts(){
-	int extraCodePoints[] = {0x2018, 0x2019, 0x201A, 0x201B, 0x201C, 0x201D, 0x201E, 0x201F, 0x2047, 0x2048, 0x2049};
+	int extraCodePoints[] = {0x0025, 0x2018, 0x2019, 0x201A, 0x201B, 0x201C, 0x201D, 0x201E, 0x201F, 0x2047, 0x2048, 0x2049};
 	size_t extraCodePointsSize = (sizeof(extraCodePoints) / sizeof(int));
 	int* codepoints = (int *)RL_MALLOC((95*sizeof(int)) + extraCodePointsSize);
 	for (int i = 0; i < 95; i++) codepoints[i] = i + 32;
 	for (int i = 0; i < extraCodePointsSize; i++) codepoints[i] = extraCodePoints[i];
 	
-	const char* fonts[] = {"resources/fonts/RoadgeekMittelschrift.ttf", "resources/fonts/amigaForeverPro.ttf"};
-	numFonts = FONT_ENUM_SIZE;	//Edit subtitle_settings.h enum to add a font.
+	char** fontPaths = listFiles("./resources/fonts/", &numFonts);
+	//numFonts = FONT_ENUM_SIZE;	//Edit subtitle_settings.h enum to add a font.
 	fontArray = (Font*)RL_CALLOC(numFonts, sizeof(Font));
 	assert(fontArray != NULL);
 	for(size_t i = 0; i < numFonts; ++i){
-		fontArray[i] = LoadFontEx(fonts[i], fontSizes[i], codepoints, 95 + extraCodePointsSize);
+		fontArray[i] = LoadFontEx(fontPaths[i], LOADED_FONT_SIZE, codepoints, 95 + extraCodePointsSize);
 		assert(IsFontReady(fontArray[i]));
 	}
 	
 	RL_FREE(codepoints);
+    freeFileList(fontPaths, numFonts);
 }
 
 void SelectPreset(SubtitleInstance bruh){
@@ -59,20 +62,29 @@ void SelectPreset(SubtitleInstance bruh){
 	LoadOverlayWindow(true);
 	//LoadSubtitles(favorite);	Why even do this
 	LoadFonts();
-	subtitleArray = (SubtitleInstance*)RL_CALLOC(1, sizeof(SubtitleInstance));
+	LoadShaders();
+	
+	subtitleArray = (SubtitleInstance*)RL_CALLOC(1, sizeof(SubtitleInstance));	//Load a single subtitle
+	numSubtitles = 1;
 	
 	subtitleArray[0].font = bruh.font;
 	subtitleArray[0].settings = favorite;	//Should already be like that
 	// ^ Sets textScale too
 	subtitleArray[0].settings.position = (Vector2){center.x, GetScreenHeight() - (favorite.SUBTITLE_FONT_SIZE * favorite.textScale * 1.5)};	//Center of the subtitles
-	numSubtitles = 1;
 	subtitleArray[0].text = "What the hell is this!";
 }
 void SelectFont(SubtitleInstance bruh){
 	for(size_t i = 0; i < numSubtitles; ++i){
 		if(subtitleArray[i].onclick != (*SelectFont)){
 			subtitleArray[i].font = bruh.font;
-			subtitleArray[i].settings.SUBTITLE_FONT_SIZE = bruh.settings.SUBTITLE_FONT_SIZE;
+			subtitleArray[i].hasToUpdate = true;
+		}
+	}
+}
+void SelectFontSize(SubtitleInstance bruh){
+	for(size_t i = 0; i < numSubtitles; ++i){
+		if(subtitleArray[i].onclick != (*SelectFontSize)){
+			subtitleArray[i].settings.textScale = bruh.settings.textScale;
 			subtitleArray[i].hasToUpdate = true;
 		}
 	}
@@ -281,6 +293,7 @@ void LoadMenu(SubtitleSettings settings){
 	
 	LoadFonts();
 	numSubtitles += numFonts;
+	numSubtitles += numFontSizes;
 	
 	subtitleArray = (SubtitleInstance*)calloc(numSubtitles, sizeof(SubtitleInstance));
 	assert(subtitleArray != NULL);
@@ -306,17 +319,34 @@ void LoadMenu(SubtitleSettings settings){
 	SubtitleInstance* fontChoices = subtitleArray + numPresets;
 	for(size_t i = 0; i < numFonts; ++i){
 		fontChoices[i] = initSubtitleInstance(settings, i);
-		const Vector2 padding = {200, 200};	//For whatever reason, I gotta add 10.
+		const Vector2 padding = {200, 100};	//For whatever reason, I gotta add 10.
 		fontChoices[i].settings.position = (Vector2){padding.x, padding.y + (i * spread * fontChoices[i].settings.SUBTITLE_FONT_SIZE * fontChoices[i].settings.textScale)};
 		//printVector2("Sub position", bunchOfSettings[i].position);
 		fontChoices[i].onclick = *SelectFont;
-		fontChoices[i].settings.SUBTITLE_FONT_SIZE = fontSizes[i];
+		fontChoices[i].settings.SUBTITLE_FONT_SIZE = LOADED_FONT_SIZE;
 		fontChoices[i].settings.OUTLINE = true;
 		fontChoices[i].settings.outlineColor = BLACK;
 	}
 	
+	//-----------	Font choices
+	SubtitleInstance* fontSizes = fontChoices + numFonts;
+	const char* labels[numFontSizes] = {"40%", "45%", "50%", "55%", "60%", "65%", "70%"};
+	//assert(sizeof(labels)/sizeof(const char*) >= numFontSizes);
+	for(size_t i = 0; i < numFontSizes; ++i){
+		fontSizes[i] = initSubtitleInstance(settings, 0);
+		const Vector2 padding = {200, 200};	//For whatever reason, I gotta add 10.
+		fontSizes[i].settings.textScale = (.40f) + (i * .05);
+		fontSizes[i].settings.position = (Vector2){padding.x, padding.y + (GetScreenHeight() / 4.0f) + (i * spread * LOADED_FONT_SIZE * fontSizes[i].settings.textScale)};
+		//printVector2("Sub position", bunchOfSettings[i].position);
+		fontSizes[i].onclick = *SelectFontSize;
+		fontSizes[i].text = labels[i];
+		
+		//TODO: Investigate missing numbers
+		//TODO: give text like "25%", "50%", etc
+	}
+	
 	#ifdef COLOR_PRESETS
-	SubtitleInstance* outlineColorChoices = fontChoices + numFonts;
+	SubtitleInstance* outlineColorChoices = fontSizes + numFontSizes;
 	for(size_t i = 0; i < customizableColorsSize + 1; ++i){
 		outlineColorChoices[i] = initSubtitleInstance(settings, DEFAULT_FONT);
 		const Vector2 padding = {300, 50};	//For whatever reason, I gotta add 10.
@@ -448,7 +478,7 @@ void UpdateSubtitles(){
 	#endif
 	
 	LoadLiveSubtitles();
-	const bool updateSubtitleText = thereIsLiveSubtitles();
+	const bool updateSubtitleText = thereIsLiveSubtitles();// This doesn't work for now, and it's black magic
 	#pragma omp parallel for
 	for(size_t i = 0; i < numSubtitles; ++i){	//Only the first one
 		if(isOverlayMode() && updateSubtitleText){	//Sample text if not overlay
@@ -495,7 +525,7 @@ void UpdateSubtitleInstance(SubtitleInstance* instance){
 	instance->hasToUpdate = false;
 	
 	Font* font = fontArray + instance->font;
-	const Vector2 subtitleBoundingBox = MeasureTextEx(*font, instance->text, instance->settings.SUBTITLE_FONT_SIZE, 5);
+	const Vector2 subtitleBoundingBox = MeasureTextEx(*font, instance->text, instance->settings.SUBTITLE_FONT_SIZE * instance->settings.textScale, 5);
 	//printVector2("Subtitle bounding box", subtitleBoundingBox);
 	const Vector2 subtitleBoundingBoxExtra = instance->settings.subtitleBoundingBoxExtra;
 	//printVector2("Subtitle bounding box extra", subtitleBoundingBoxExtra);
@@ -520,7 +550,7 @@ void UpdateSubtitleInstance(SubtitleInstance* instance){
 	}else{
 		ClearBackground(BLANK);	//Still need to clear it to get rid of anything
 	}
-	DrawTextEx(*font, instance->text, subtitlePosition, instance->settings.SUBTITLE_FONT_SIZE, 5, subtitleTextColor);
+	DrawTextEx(*font, instance->text, subtitlePosition, instance->settings.SUBTITLE_FONT_SIZE * instance->settings.textScale, 5, subtitleTextColor);
 	EndTextureMode();
 }
 

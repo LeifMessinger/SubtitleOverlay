@@ -8,7 +8,7 @@
 
 const SubtitleSettings defaults = {
 	100.0f,	//Font size
-	0.333f,	//Text scale
+	0.5f,	//Text scale
 	{0, 0},	//Text position
 	
 	WHITE, //Subtitle color
