@@ -478,7 +478,7 @@ void UpdateSubtitles(){
 	#endif
 	
 	LoadLiveSubtitles();
-	const bool updateSubtitleText = thereIsLiveSubtitles();// This doesn't work for now, and it's black magic
+	const bool updateSubtitleText = thereIsLiveSubtitles();
 	#pragma omp parallel for
 	for(size_t i = 0; i < numSubtitles; ++i){	//Only the first one
 		if(isOverlayMode() && updateSubtitleText){	//Sample text if not overlay

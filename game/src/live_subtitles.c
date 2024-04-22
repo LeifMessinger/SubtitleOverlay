@@ -70,8 +70,8 @@ bool isThereLiveSubtitles(){
 	return !isPastTime(getLiveSubtitlesWaitTime());
 }
 bool thereIsLiveSubtitlesValue = false;
-bool thereIsLiveSubtitles(){	//Always returns false
-	return true;
+bool thereIsLiveSubtitles(){	//In theory, we'd flip this every time there is new subtitles, but it is hard to tell if there is new subtitles.
+	//return true;
 	const bool result = thereIsLiveSubtitlesValue;
 	thereIsLiveSubtitlesValue = false;
 	return result;
