@@ -11,6 +11,7 @@
 #include "raylib.h"
 #include "subtitle_settings.h" //OVERLAY_MODE
 #include "subtitles.h" //LoadSubtitles UpdateSubtitleTexture DrawSubtitleTexture UnloadSubtitles
+#include "live_subtitles.h" //LoadSubtitles UpdateSubtitleTexture DrawSubtitleTexture UnloadSubtitles
 
 #include <string.h>	//strcat
 #include <stdio.h>	//puts
@@ -36,6 +37,7 @@ void LoadGameShit(){
 	LoadOverlayWindow(false);
 	LoadShaders();
 	LoadMenu(settings);
+	LiveSubtitlesStartup();	//Remove old subtitles files
 }
 
 void UpdateDrawFrame(){	//GetFrameTime gives you frame time
@@ -62,6 +64,7 @@ void UnloadGameShit(){
 	UnloadSubtitles();
 	CloseWindow();
 	UnloadShaders();
+	//LiveSubtitlesStartup();	//Ironically, cleaning up the files
 }
 
 //----------------------------------------------------------------------------------

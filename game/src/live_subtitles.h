@@ -11,6 +11,7 @@
 
 #define LIVE_SUBTITLES_BUFFER_SIZE (1024 * 3)
 
+void LiveSubtitlesStartup();
 void UnloadLiveSubtitles();
 
 const char* LoadLiveSubtitles();
